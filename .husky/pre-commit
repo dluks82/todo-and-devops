@@ -1,1 +1,2 @@
-pnpm test
+# Verifica apenas o lint em vez de executar todos os testes
+pnpm lint

@@ -58,6 +58,12 @@ export default [
   },
   prettier,
   {
-    ignores: ['dist/', 'node_modules/', '**/*.js', '!eslint.config.js', '**/dist/**'],
+    ignores: [
+      'dist/',
+      'node_modules/',
+      '**/*.js',
+      '!eslint.config.js',
+      '**/dist/**',
+    ],
   },
 ]
