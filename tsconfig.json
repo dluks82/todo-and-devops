@@ -12,7 +12,8 @@
     "types": ["node"],
     "baseUrl": ".",
     "paths": {
-      "@shared/*": ["packages/shared/src/*"]
+      "@shared/*": ["packages/shared/src/*"],
+      "@types/*": ["types/*"]
     },
     "allowSyntheticDefaultImports": true,
     "declaration": true,

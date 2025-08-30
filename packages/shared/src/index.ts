@@ -8,3 +8,16 @@ export interface BaseEntity {
   createdAt: Date
   updatedAt: Date
 }
+
+export interface HealthCheckResult {
+  status: 'ok' | 'error'
+  timestamp: string
+  uptime: number
+  version: string
+  environment: string
+  services?: {
+    database?: 'ok' | 'error'
+    redis?: 'ok' | 'error'
+    external?: 'ok' | 'error'
+  }
+}
