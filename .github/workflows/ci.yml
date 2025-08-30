@@ -1,4 +1,4 @@
-name: CI
+name: Continuous Integration
 
 on:
   push:
@@ -123,12 +123,3 @@ jobs:
 
       - name: Verificar vulnerabilidades
         run: pnpm audit --prod
-
-      # Opcional: Adicionar CodeQL ou outras ferramentas de segurança
-      # - name: Inicializar CodeQL
-      #   uses: github/codeql-action/init@v2
-      #   with:
-      #     languages: javascript
-      #
-      # - name: Executar análise CodeQL
-      #   uses: github/codeql-action/analyze@v2

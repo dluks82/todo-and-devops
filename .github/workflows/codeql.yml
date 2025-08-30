@@ -1,0 +1,49 @@
+name: 'CodeQL Analysis'
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 2 * * 1' # Executar toda segunda-feira às 2h da manhã
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ['javascript']
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: ${{ matrix.language }}
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Configurar PNPM
+        uses: pnpm/action-setup@v3
+        with:
+          version: '9.0.0'
+          run_install: false
+
+      - name: Instalar dependências
+        run: pnpm install
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2

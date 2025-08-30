@@ -8,7 +8,7 @@ Este é um monorepo que contém uma aplicação completa de gerenciamento de tar
 
 ### 🏗️ Arquitetura
 
-```
+```code
 todo-and-devops/
 ├── apps/
 │   ├── api/          # Backend API (Fastify + TypeScript)
