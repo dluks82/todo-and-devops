@@ -4,7 +4,7 @@ import { VERSION, PROJECT_NAME, Status, BaseEntity } from '../index'
 describe('Shared Package', () => {
   describe('Constants', () => {
     it('should have correct version', () => {
-      expect(VERSION).toBe('1.0.0')
+      expect(VERSION).toBe('0.0.1')
     })
 
     it('should have correct project name', () => {

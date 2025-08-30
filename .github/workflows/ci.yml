@@ -1,0 +1,134 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop, 'feature/**' ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:  # Permite execução manual
+
+jobs:
+  validate:
+    name: Validação de Código
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Configurar PNPM
+        uses: pnpm/action-setup@v3
+        with:
+          version: '9.0.0'
+          run_install: false
+
+      - name: Obter diretório da store do PNPM
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Cache de módulos do PNPM
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Instalar dependências
+        run: pnpm install
+
+      - name: Verificar tipos
+        run: pnpm typecheck
+
+      - name: Executar lint
+        run: pnpm lint
+
+      - name: Verificar formatação
+        run: pnpm format:check
+
+  test:
+    name: Testes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Configurar PNPM
+        uses: pnpm/action-setup@v3
+        with:
+          version: '9.0.0'
+          run_install: false
+
+      - name: Obter diretório da store do PNPM
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Cache de módulos do PNPM
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Instalar dependências
+        run: pnpm install
+
+      - name: Executar testes
+        run: pnpm test
+
+      - name: Executar testes com cobertura
+        run: pnpm test:coverage
+
+      - name: Salvar relatório de cobertura
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorio-cobertura
+          path: |
+            apps/api/coverage/
+            packages/shared/coverage/
+          retention-days: 7
+
+  security:
+    name: Verificação de Segurança
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Configurar PNPM
+        uses: pnpm/action-setup@v3
+        with:
+          version: '9.0.0'
+          run_install: false
+
+      - name: Instalar dependências
+        run: pnpm install
+
+      - name: Verificar vulnerabilidades
+        run: pnpm audit --prod
+
+      # Opcional: Adicionar CodeQL ou outras ferramentas de segurança
+      # - name: Inicializar CodeQL
+      #   uses: github/codeql-action/init@v2
+      #   with:
+      #     languages: javascript
+      # 
+      # - name: Executar análise CodeQL
+      #   uses: github/codeql-action/analyze@v2
