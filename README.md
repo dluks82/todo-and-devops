@@ -39,16 +39,6 @@ O projeto está configurado para deploy automático usando Coolify, uma platafor
 
 [Documentação do Coolify](docs/COOLIFY.md)
 
-### Deploy com Coolify
-
-O projeto está configurado para deploy automático usando Coolify, uma plataforma de auto-hospedagem.
-
-- **Build automático**: Imagens Docker construídas no GitHub Actions
-- **Deploy automático**: Webhook para atualização da aplicação no Coolify
-- **Containerização**: Gerenciamento simplificado via Coolify
-
-[Documentação do Coolify](docs/COOLIFY.md)
-
 ## 🛠️ Tecnologias Utilizadas
 
 ### Backend
@@ -86,7 +76,7 @@ O projeto está configurado para deploy automático usando Coolify, uma platafor
 
 ```bash
 # Clone o repositório
-git clone <repository-url>
+git clone https://github.com/dluks82/todo-and-devops.git
 cd todo-and-devops
 
 # Instale as dependências
@@ -129,7 +119,7 @@ GET /health
 
 ## 📋 Roadmap
 
-### ✅ Etapa 1 - Setup Inicial (Atual)
+### ✅ Etapa 1 - Setup Inicial
 
 - [x] Configuração do monorepo com pnpm
 - [x] Estrutura básica da API
@@ -137,14 +127,19 @@ GET /health
 - [x] Configuração TypeScript
 - [x] Documentação inicial
 
+### ✅ Etapa 2 - DevOps (Atual)
+
+- [x] Dockerização
+- [x] CI/CD com GitHub Actions
+- [x] Deploy com Coolify
+- [x] Análise de segurança com CodeQL
+
 ### 🔄 Próximas Etapas
 
-- [ ] **Etapa 2**: CRUD completo de tarefas
-- [ ] **Etapa 3**: Frontend básico
-- [ ] **Etapa 4**: Dockerização
-- [ ] **Etapa 5**: CI/CD com GitHub Actions
-- [ ] **Etapa 6**: Kubernetes
-- [ ] **Etapa 7**: Monitoramento e logs
+- [ ] **Etapa 3**: CRUD completo de tarefas
+- [ ] **Etapa 4**: Frontend básico
+- [ ] **Etapa 5**: Kubernetes
+- [ ] **Etapa 6**: Monitoramento e logs
 
 ## 🧪 Testes
 
@@ -173,8 +168,13 @@ Veja o [Guia de Testes](./docs/TESTING.md) para mais detalhes.
 - [Guia de Desenvolvimento](./docs/DEVELOPMENT.md)
 - [Guia de Testes](./docs/TESTING.md)
 - [Guia de Tipos TypeScript](./docs/TYPES.md)
-- [Arquitetura](./docs/ARCHITECTURE.md) (futuro)
-- [API Reference](./docs/API.md) (futuro)
+- [Conventional Commits](./docs/COMMITS.md)
+- [CI/CD](./docs/CICD.md)
+- [Coolify](./docs/COOLIFY.md)
+- [Arquitetura](./docs/ARCHITECTURE.md) (em desenvolvimento)
+- [API Reference](./docs/API.md) (em desenvolvimento)
+
+> Nota: Os documentos marcados como "em desenvolvimento" serão adicionados nas próximas etapas do projeto.
 
 ## 🤝 Contribuição
 
