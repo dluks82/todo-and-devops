@@ -15,8 +15,39 @@ todo-and-devops/
 │   └── web/          # Frontend (futuro - React/Next.js)
 ├── packages/
 │   └── shared/       # Tipos e utilitários compartilhados
-└── docs/             # Documentação do projeto
+├── docs/             # Documentação do projeto
+└── .github/          # GitHub Actions e configurações
 ```
+
+### Integração e Entrega Contínua
+
+O projeto utiliza GitHub Actions para automação de processos de CI/CD:
+
+- **CI**: Validação de código, testes e análise de segurança
+- **CD**: Construção e publicação de imagens Docker
+- **CD**: Deploy automático para o Coolify
+
+[Documentação de CI/CD](docs/CICD.md)
+
+### Deploy com Coolify
+
+O projeto está configurado para deploy automático usando Coolify, uma plataforma de auto-hospedagem:
+
+- **Build automático**: Imagens Docker construídas no GitHub Actions
+- **Deploy automático**: Webhook para atualização da aplicação no Coolify
+- **Containerização**: Gerenciamento simplificado via Coolify
+
+[Documentação do Coolify](docs/COOLIFY.md)
+
+### Deploy com Coolify
+
+O projeto está configurado para deploy automático usando Coolify, uma plataforma de auto-hospedagem.
+
+- **Build automático**: Imagens Docker construídas no GitHub Actions
+- **Deploy automático**: Webhook para atualização da aplicação no Coolify
+- **Containerização**: Gerenciamento simplificado via Coolify
+
+[Documentação do Coolify](docs/COOLIFY.md)
 
 ## 🛠️ Tecnologias Utilizadas
 
@@ -27,12 +58,11 @@ todo-and-devops/
 - **Zod** - Validação de schemas
 - **pnpm** - Gerenciador de pacotes rápido
 
-### DevOps (Futuro)
+### DevOps
 
 - **Docker** - Containerização
-- **Kubernetes** - Orquestração
 - **GitHub Actions** - CI/CD
-- **Terraform** - Infraestrutura como código
+- **Coolify** - Plataforma de deploy auto-hospedada
 
 ## 📦 Estrutura do Monorepo
 
