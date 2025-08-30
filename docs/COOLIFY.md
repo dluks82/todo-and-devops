@@ -15,7 +15,7 @@ Este documento descreve como configurar a integração do projeto com o Coolify 
 1. Acesse sua instância do Coolify
 2. Navegue até "Keys & Tokens" / "API tokens"
 3. Crie um novo token com nome descritivo (ex: "GitHub Actions")
-4. Selecione a permissão "*" para acesso completo
+4. Selecione a permissão "\*" para acesso completo
 5. Copie o token gerado (ele será mostrado apenas uma vez)
 
 ### 2. Configurar Aplicação no Coolify
@@ -26,6 +26,7 @@ Este documento descreve como configurar a integração do projeto com o Coolify 
    ```bash
    ghcr.io/dluks82/todo-and-devops-api:latest
    ```
+
 3. Configure as variáveis de ambiente necessárias para a aplicação
 4. Configure a porta exposta (3000)
 5. Obtenha a URL do webhook da aplicação na seção "Webhook" da aplicação

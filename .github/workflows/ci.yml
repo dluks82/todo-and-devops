@@ -2,10 +2,10 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop, 'feature/**' ]
+    branches: [main, develop, 'feature/**']
   pull_request:
-    branches: [ main, develop ]
-  workflow_dispatch:  # Permite execução manual
+    branches: [main, develop]
+  workflow_dispatch: # Permite execução manual
 
 jobs:
   validate:
@@ -129,6 +129,6 @@ jobs:
       #   uses: github/codeql-action/init@v2
       #   with:
       #     languages: javascript
-      # 
+      #
       # - name: Executar análise CodeQL
       #   uses: github/codeql-action/analyze@v2
