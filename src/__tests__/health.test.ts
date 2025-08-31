@@ -3,7 +3,7 @@ import { FastifyInstance } from 'fastify'
 
 describe('Health Check', () => {
   let app: FastifyInstance
-  
+
   beforeEach(() => {
     app = {
       get: jest.fn(),
