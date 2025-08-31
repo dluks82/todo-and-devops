@@ -1,4 +1,4 @@
-import { routes } from '../routes'
+import { routes } from '@/routes'
 import { FastifyInstance } from 'fastify'
 
 describe('Health Check', () => {

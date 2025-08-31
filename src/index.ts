@@ -1,7 +1,10 @@
+// Configurar aliases de caminho
+import 'module-alias/register'
+
 import Fastify, { FastifyInstance } from 'fastify'
 import cors from '@fastify/cors'
-import { routes } from './routes'
-import { PROJECT_NAME, VERSION } from './types'
+import { routes } from '@/routes'
+import { PROJECT_NAME, VERSION } from '@/types'
 
 const app: FastifyInstance = Fastify({
   logger: true,

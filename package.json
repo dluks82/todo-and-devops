@@ -22,7 +22,8 @@
   "dependencies": {
     "fastify": "^4.24.3",
     "@fastify/cors": "^8.4.0",
-    "zod": "^3.22.4"
+    "zod": "^3.22.4",
+    "module-alias": "^2.2.3"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.0.0",
@@ -55,5 +56,8 @@
       "eslint --fix",
       "prettier --write"
     ]
+  },
+  "_moduleAliases": {
+    "@": "dist"
   }
 }
