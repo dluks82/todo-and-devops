@@ -26,6 +26,11 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'yarn'
 
+      - name: Habilitar Corepack e Yarn 1
+        run: |
+          corepack enable
+          corepack prepare yarn@1.22.22 --activate
+
       - name: Instalar dependências
         run: yarn install --frozen-lockfile
 
@@ -47,6 +52,11 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'yarn'
+
+      - name: Habilitar Corepack e Yarn 1
+        run: |
+          corepack enable
+          corepack prepare yarn@1.22.22 --activate
 
       - name: Instalar dependências
         run: yarn install --frozen-lockfile
@@ -76,6 +86,11 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'yarn'
+
+      - name: Habilitar Corepack e Yarn 1
+        run: |
+          corepack enable
+          corepack prepare yarn@1.22.22 --activate
 
       - name: Instalar dependências
         run: yarn install --frozen-lockfile

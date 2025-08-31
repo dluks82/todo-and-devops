@@ -3,15 +3,18 @@ FROM node:20-alpine AS builder
 # Configurar diretório de trabalho
 WORKDIR /app
 
-# Copiar arquivos de configuração
-COPY package.json tsconfig.json ./
+# Instalar Yarn (Yarn classic)
+RUN apk add --no-cache yarn
+
+# Copiar arquivos de configuração e lockfile
+COPY package.json yarn.lock tsconfig.json ./
 COPY src ./src
 
-# Instalar dependências
-RUN npm install
+# Instalar dependências (respeitando lockfile)
+RUN yarn install --frozen-lockfile
 
 # Compilar o projeto
-RUN npm run build
+RUN yarn build
 
 # Verificar se os arquivos de build existem
 RUN test -f dist/index.js || (echo 'ERRO: dist/index.js não encontrado' && exit 1)
@@ -22,6 +25,9 @@ FROM node:20-alpine AS runner
 # Define a variável NODE_ENV
 ENV NODE_ENV=production
 
+# Instalar Yarn (Yarn classic)
+RUN apk add --no-cache yarn
+
 # Criar usuário não-root para segurança
 RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001 -G nodejs
 
@@ -30,10 +36,11 @@ WORKDIR /app
 
 # Copiar os arquivos compilados e dependências da etapa de build
 COPY --from=builder --chown=nodejs:nodejs /app/package.json ./
+COPY --from=builder --chown=nodejs:nodejs /app/yarn.lock ./
 COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
 
-# Instalar apenas dependências de produção
-RUN npm install --production
+# Instalar apenas dependências de produção (sem rodar scripts como husky)
+RUN yarn install --frozen-lockfile --production=true --ignore-scripts
 
 # Trocar para o usuário não-root
 USER nodejs
