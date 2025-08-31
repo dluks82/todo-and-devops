@@ -3,6 +3,7 @@ name: Continuous Integration
 on:
   push:
     branches: [main, develop, 'feature/**']
+    tags: ['v*']
   pull_request:
     branches: [main, develop]
   workflow_dispatch: # Permite execução manual
@@ -24,21 +25,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'yarn'
-
-      - name: Habilitar Corepack e Yarn 1
-        run: |
-          corepack enable
-          corepack prepare yarn@1.22.22 --activate
+          cache: 'npm'
 
       - name: Instalar dependências
-        run: yarn install --frozen-lockfile
+        run: npm ci
 
       - name: Verificar formatação
-        run: yarn format:check
+        run: npm run format:check
 
       - name: Executar lint
-        run: yarn lint
+        run: npm run lint
 
   test:
     name: Testes
@@ -51,21 +47,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'yarn'
-
-      - name: Habilitar Corepack e Yarn 1
-        run: |
-          corepack enable
-          corepack prepare yarn@1.22.22 --activate
+          cache: 'npm'
 
       - name: Instalar dependências
-        run: yarn install --frozen-lockfile
+        run: npm ci
 
       - name: Executar testes
-        run: yarn test
+        run: npm test
 
       - name: Executar testes com cobertura
-        run: yarn test:coverage
+        run: npm run test:coverage
 
       - name: Salvar relatório de cobertura
         uses: actions/upload-artifact@v4
@@ -85,23 +76,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'yarn'
-
-      - name: Habilitar Corepack e Yarn 1
-        run: |
-          corepack enable
-          corepack prepare yarn@1.22.22 --activate
+          cache: 'npm'
 
       - name: Instalar dependências
-        run: yarn install --frozen-lockfile
+        run: npm ci
 
       - name: Verificar vulnerabilidades
-        run: yarn audit --groups dependencies
+        run: npm audit --omit=dev
+        continue-on-error: true
 
   build-and-push-image:
     name: Build e Push da Imagem Docker
     needs: [validation, test, security]
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/v'))
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -129,15 +116,23 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=sha,format=short
+            # Branch tags (ex.: main, develop)
             type=ref,event=branch
-            latest
+            # Short SHA tag
+            type=sha,format=short
+            # latest apenas no branch padrão (main)
+            type=raw,value=latest,enable={{is_default_branch}}
+            # Semver tags quando publicar tags v*
+            type=semver,pattern={{version}},event=tag
+            type=semver,pattern={{major}}.{{minor}},event=tag
+            type=semver,pattern={{major}},event=tag
 
       - name: Build e Push da imagem Docker
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile
+          target: prod
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

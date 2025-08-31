@@ -21,10 +21,10 @@ module.exports = [
       'node_modules/**',
       'coverage/**',
       '*.config.js',
-      'commitlint.config.js',
+      'commitlint.config.cjs',
       'eslint.config.js',
       '.husky/**',
-      'jest.config.js',
+      'jest.config.cjs',
     ],
     languageOptions: {
       parser: require('@typescript-eslint/parser'),
@@ -45,8 +45,12 @@ module.exports = [
       '@typescript-eslint/explicit-function-return-type': [
         'warn',
         {
+          // Não exigir tipo de retorno em arrow functions
           allowExpressions: true,
           allowTypedFunctionExpressions: true,
+          allowHigherOrderFunctions: true,
+          allowDirectConstAssertionInArrowFunctions: true,
+          allowConciseArrowFunctionExpressionsStartingWithVoid: true,
         },
       ],
       'no-console': ['warn', { allow: ['warn', 'error', 'info'] }],
@@ -64,5 +68,12 @@ module.exports = [
       '.husky/**',
       'jest.config.js',
     ],
+  },
+  {
+    files: ['**/__tests__/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-unnecessary-type-assertion': 'off',
+      '@typescript-eslint/explicit-function-return-type': 'off',
+    },
   },
 ]
