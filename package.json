@@ -20,19 +20,20 @@
     "docker:run": "docker run -p 3000:3000 --rm todo-api"
   },
   "dependencies": {
-    "fastify": "^4.24.3",
     "@fastify/cors": "^8.4.0",
-    "zod": "^3.22.4",
-    "module-alias": "^2.2.3"
+    "fastify": "^4.24.3",
+    "module-alias": "^2.2.3",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.0.0",
     "@commitlint/config-conventional": "^19.0.0",
-    "@typescript-eslint/eslint-plugin": "^8.41.0",
-    "@typescript-eslint/parser": "^8.41.0",
+    "@eslint/eslintrc": "^3.3.1",
     "@types/jest": "^29.5.0",
     "@types/node": "^20.19.0",
     "@types/supertest": "^6.0.2",
+    "@typescript-eslint/eslint-plugin": "^8.41.0",
+    "@typescript-eslint/parser": "^8.41.0",
     "commitizen": "^4.3.0",
     "cz-conventional-changelog": "^3.3.0",
     "eslint": "^9.34.0",
@@ -44,7 +45,8 @@
     "supertest": "^6.3.3",
     "ts-jest": "^29.1.1",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.3.0"
+    "typescript": "^5.3.0",
+    "typescript-eslint": "^8.41.0"
   },
   "config": {
     "commitizen": {
