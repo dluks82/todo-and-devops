@@ -24,7 +24,7 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000
 const HOST = process.env.HOST || '0.0.0.0'
 
 // Iniciar o servidor
-const start = async () => {
+const start = async (): Promise<void> => {
   try {
     await app.listen({ port: PORT, host: HOST })
     app.log.info(`${PROJECT_NAME} v${VERSION}`)
@@ -36,4 +36,4 @@ const start = async () => {
   }
 }
 
-start()
+void start()

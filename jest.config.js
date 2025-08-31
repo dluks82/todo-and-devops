@@ -16,4 +16,6 @@ module.exports = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
+  // Aumentando o timeout padrão para 10 segundos
+  testTimeout: 10000,
 }

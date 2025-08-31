@@ -10,8 +10,8 @@ describe('Health Check', () => {
     } as unknown as FastifyInstance
   })
 
-  it('should register the health endpoint', async () => {
-    await routes(app)
+  it('should register the health endpoint', () => {
+    routes(app)
     expect(app.get).toHaveBeenCalledWith('/health', expect.any(Function))
   })
 })
