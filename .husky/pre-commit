@@ -1,2 +1,2 @@
-# Verifica apenas o lint em vez de executar todos os testes
-pnpm lint
+# Auto-fix em arquivos staged com lint-staged
+pnpm exec lint-staged
