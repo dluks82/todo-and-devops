@@ -1,21 +1,22 @@
-# 📋 Todo & DevOps - Monorepo
+# 📋 Todo API
 
 > Projeto desenvolvido como prática para a disciplina de DevOps em graduação de Análise e Desenvolvimento de Sistemas (PUC-PR).
 
 ## 🚀 Sobre o Projeto
 
-Este é um monorepo que contém uma aplicação completa de gerenciamento de tarefas (Todo App) com foco em práticas de DevOps. O projeto está estruturado em etapas incrementais para demonstrar conceitos de CI/CD, containerização, orquestração e automação.
+Uma API simples para gerenciamento de tarefas (Todo App) com foco em práticas de DevOps. O projeto demonstra conceitos de CI/CD, containerização, orquestração e automação.
 
 ### 🏗️ Arquitetura
 
 ```code
 todo-and-devops/
-├── apps/
-│   ├── api/          # Backend API (Fastify + TypeScript)
-│   └── web/          # Frontend (futuro - React/Next.js)
-├── packages/
-│   └── shared/       # Tipos e utilitários compartilhados
+├── src/              # Código fonte da API
+│   ├── index.ts      # Ponto de entrada da aplicação
+│   ├── routes.ts     # Definição de rotas
+│   └── types.ts      # Tipos e interfaces
+├── dist/             # Código compilado (gerado)
 ├── docs/             # Documentação do projeto
+├── Dockerfile        # Configuração do Docker
 └── .github/          # GitHub Actions e configurações
 ```
 
@@ -46,31 +47,14 @@ O projeto está configurado para deploy automático usando Coolify, uma platafor
 - **Fastify** - Framework web rápido e eficiente
 - **TypeScript** - Tipagem estática para JavaScript
 - **Zod** - Validação de schemas
-- **pnpm** - Gerenciador de pacotes rápido
-
-### DevOps
-
-- **Docker** - Containerização
-- **GitHub Actions** - CI/CD
-- **Coolify** - Plataforma de deploy auto-hospedada
-
-## 📦 Estrutura do Monorepo
-
-### Apps
-
-- **API** (`apps/api/`): Servidor REST API com Fastify
-- **Web** (`apps/web/`): Frontend (será desenvolvido posteriormente)
-
-### Packages
-
-- **Shared** (`packages/shared/`): Tipos e utilitários compartilhados entre apps
+- **Yarn** - Gerenciador de pacotes
 
 ## 🚀 Como Executar
 
 ### Pré-requisitos
 
-- Node.js 18+
-- pnpm 9.0.0+
+- Node.js v20+
+- Yarn v1.22+
 
 ### Instalação
 
@@ -80,23 +64,30 @@ git clone https://github.com/dluks82/todo-and-devops.git
 cd todo-and-devops
 
 # Instale as dependências
-pnpm install
+yarn install
 ```
 
 ### Desenvolvimento
 
 ```bash
-# Executar apenas a API
-pnpm dev:api
+# Executar em modo de desenvolvimento com hot-reload
+yarn dev
 
-# Executar todos os serviços
-pnpm dev
+# Build do projeto
+yarn build
 
-# Build de todos os projetos
-pnpm build
+# Executar testes
+yarn test
+```
 
-# Verificar tipos
-pnpm typecheck
+### Docker
+
+```bash
+# Construir a imagem Docker
+yarn docker:build
+
+# Executar o container Docker
+yarn docker:run
 ```
 
 ### Endpoints Disponíveis
@@ -121,44 +112,50 @@ GET /health
 
 ### ✅ Etapa 1 - Setup Inicial
 
-- [x] Configuração do monorepo com pnpm
 - [x] Estrutura básica da API
 - [x] Endpoint `/health` funcional
 - [x] Configuração TypeScript
 - [x] Documentação inicial
 
-### ✅ Etapa 2 - DevOps (Atual)
+### ✅ Etapa 2 - DevOps
 
 - [x] Dockerização
 - [x] CI/CD com GitHub Actions
 - [x] Deploy com Coolify
 - [x] Análise de segurança com CodeQL
 
+### ✅ Etapa 3 - Simplificação da Estrutura
+
+- [x] Migração de monorepo para projeto independente
+- [x] Simplificação do processo de build
+- [x] Ajustes na configuração do TypeScript
+- [x] Atualização da documentação
+
 ### 🔄 Próximas Etapas
 
-- [ ] **Etapa 3**: CRUD completo de tarefas
-- [ ] **Etapa 4**: Frontend básico
-- [ ] **Etapa 5**: Kubernetes
+- [ ] **Etapa 4**: CRUD completo de tarefas
+- [ ] **Etapa 5**: Integração com banco de dados
+- [ ] **Etapa 6**: Kubernetes
+- [ ] **Etapa 7**: Monitoramento e logs
 - [ ] **Etapa 6**: Monitoramento e logs
 
 ## 🧪 Testes
 
 ```bash
 # Executar todos os testes
-pnpm test
+yarn test
 
 # Executar testes com watch mode
-pnpm test:watch
+yarn test:watch
 
 # Executar testes com coverage
-pnpm test:coverage
+yarn test:coverage
 ```
 
 ### Cobertura Atual
 
-- **API**: 100% de cobertura
-- **Shared**: 100% de cobertura
-- **Total**: 17 testes passando
+- **API**: 100% de cobertura nos testes existentes
+- **Total**: 2 testes passando
 
 Veja o [Guia de Testes](./docs/TESTING.md) para mais detalhes.
 
@@ -171,16 +168,12 @@ Veja o [Guia de Testes](./docs/TESTING.md) para mais detalhes.
 - [Conventional Commits](./docs/COMMITS.md)
 - [CI/CD](./docs/CICD.md)
 - [Coolify](./docs/COOLIFY.md)
-- [Arquitetura](./docs/ARCHITECTURE.md) (em desenvolvimento)
-- [API Reference](./docs/API.md) (em desenvolvimento)
-
-> Nota: Os documentos marcados como "em desenvolvimento" serão adicionados nas próximas etapas do projeto.
 
 ## 🤝 Contribuição
 
 1. Fork o projeto
 2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+3. Commit suas mudanças (`git commit -m 'feat: add some amazing feature'`)
 4. Push para a branch (`git push origin feature/AmazingFeature`)
 5. Abra um Pull Request
 

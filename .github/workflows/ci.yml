@@ -10,10 +10,10 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}-api
-  PNPM_VERSION: 10.15.0
+  NODE_VERSION: '20'
 
 jobs:
-  validate:
+  validation:
     name: Validação de Código
     runs-on: ubuntu-latest
     steps:
@@ -23,39 +23,17 @@ jobs:
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-
-      - name: Configurar PNPM
-        uses: pnpm/action-setup@v3
-        with:
-          version: ${{ env.PNPM_VERSION }}
-          run_install: false
-
-      - name: Obter diretório da store do PNPM
-        id: pnpm-cache
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
-
-      - name: Cache de módulos do PNPM
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
 
       - name: Instalar dependências
-        run: pnpm install --frozen-lockfile
-
-      - name: Verificar tipos
-        run: pnpm typecheck
-
-      - name: Executar lint
-        run: pnpm lint
+        run: yarn install --frozen-lockfile
 
       - name: Verificar formatação
-        run: pnpm format:check
+        run: yarn format:check
+
+      - name: Executar lint
+        run: yarn lint
 
   test:
     name: Testes
@@ -67,44 +45,23 @@ jobs:
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-
-      - name: Configurar PNPM
-        uses: pnpm/action-setup@v3
-        with:
-          version: ${{ env.PNPM_VERSION }}
-          run_install: false
-
-      - name: Obter diretório da store do PNPM
-        id: pnpm-cache
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
-
-      - name: Cache de módulos do PNPM
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
 
       - name: Instalar dependências
-        run: pnpm install --frozen-lockfile
+        run: yarn install --frozen-lockfile
 
       - name: Executar testes
-        run: pnpm test
+        run: yarn test
 
       - name: Executar testes com cobertura
-        run: pnpm test:coverage
+        run: yarn test:coverage
 
       - name: Salvar relatório de cobertura
         uses: actions/upload-artifact@v4
         with:
           name: relatorio-cobertura
-          path: |
-            apps/api/coverage/
-            packages/shared/coverage/
+          path: coverage/
           retention-days: 7
 
   security:
@@ -117,23 +74,18 @@ jobs:
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-
-      - name: Configurar PNPM
-        uses: pnpm/action-setup@v3
-        with:
-          version: ${{ env.PNPM_VERSION }}
-          run_install: false
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
 
       - name: Instalar dependências
-        run: pnpm install --frozen-lockfile
+        run: yarn install --frozen-lockfile
 
       - name: Verificar vulnerabilidades
-        run: pnpm audit --prod
+        run: yarn audit --groups dependencies
 
   build-and-push-image:
     name: Build e Push da Imagem Docker
-    needs: [validate, test, security]
+    needs: [validation, test, security]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
     runs-on: ubuntu-latest
     permissions:
@@ -170,7 +122,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./apps/api/Dockerfile
+          file: ./Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
