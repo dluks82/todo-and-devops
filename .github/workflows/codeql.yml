@@ -9,7 +9,7 @@ on:
     - cron: '0 2 * * 1' # Executar toda segunda-feira às 2h da manhã
 
 env:
-  PNPM_VERSION: 10.15.0
+  NODE_VERSION: '20'
 
 jobs:
   analyze:
@@ -37,16 +37,11 @@ jobs:
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-
-      - name: Configurar PNPM
-        uses: pnpm/action-setup@v3
-        with:
-          version: ${{ env.PNPM_VERSION }}
-          run_install: false
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
 
       - name: Instalar dependências
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3

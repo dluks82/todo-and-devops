@@ -10,7 +10,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}-api
-  PNPM_VERSION: 10.15.0
+  NODE_VERSION: '20'
 
 jobs:
   validate:
@@ -23,39 +23,20 @@ jobs:
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-
-      - name: Configurar PNPM
-        uses: pnpm/action-setup@v3
-        with:
-          version: ${{ env.PNPM_VERSION }}
-          run_install: false
-
-      - name: Obter diretório da store do PNPM
-        id: pnpm-cache
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
-
-      - name: Cache de módulos do PNPM
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
 
       - name: Instalar dependências
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
       - name: Verificar tipos
-        run: pnpm typecheck
+        run: npm run build -- --noEmit
 
       - name: Executar lint
-        run: pnpm lint
+        run: npm run lint
 
       - name: Verificar formatação
-        run: pnpm format:check
+        run: npm run format:check
 
   test:
     name: Testes
@@ -67,44 +48,23 @@ jobs:
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-
-      - name: Configurar PNPM
-        uses: pnpm/action-setup@v3
-        with:
-          version: ${{ env.PNPM_VERSION }}
-          run_install: false
-
-      - name: Obter diretório da store do PNPM
-        id: pnpm-cache
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
-
-      - name: Cache de módulos do PNPM
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
 
       - name: Instalar dependências
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
       - name: Executar testes
-        run: pnpm test
+        run: npm test
 
       - name: Executar testes com cobertura
-        run: pnpm test:coverage
+        run: npm run test:coverage
 
       - name: Salvar relatório de cobertura
         uses: actions/upload-artifact@v4
         with:
           name: relatorio-cobertura
-          path: |
-            apps/api/coverage/
-            packages/shared/coverage/
+          path: coverage/
           retention-days: 7
 
   security:
@@ -117,19 +77,14 @@ jobs:
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-
-      - name: Configurar PNPM
-        uses: pnpm/action-setup@v3
-        with:
-          version: ${{ env.PNPM_VERSION }}
-          run_install: false
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
 
       - name: Instalar dependências
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
       - name: Verificar vulnerabilidades
-        run: pnpm audit --prod
+        run: npm audit --production
 
   build-and-push-image:
     name: Build e Push da Imagem Docker
@@ -170,7 +125,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./apps/api/Dockerfile
+          file: ./Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
