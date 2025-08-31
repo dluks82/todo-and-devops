@@ -1,12 +1,12 @@
-const { FlatCompat } = require('@eslint/eslintrc');
-const path = require('path');
+const { FlatCompat } = require('@eslint/eslintrc')
+const path = require('path')
 
 const compat = new FlatCompat({
   baseDirectory: __dirname,
   recommendedConfig: {
     extends: ['eslint:recommended'],
   },
-});
+})
 
 module.exports = [
   ...compat.extends(
@@ -17,8 +17,8 @@ module.exports = [
   {
     files: ['**/*.ts'],
     ignores: [
-      'dist/**', 
-      'node_modules/**', 
+      'dist/**',
+      'node_modules/**',
       'coverage/**',
       '*.config.js',
       'commitlint.config.js',
@@ -37,13 +37,32 @@ module.exports = [
       '@typescript-eslint': require('@typescript-eslint/eslint-plugin'),
     },
     rules: {
-      '@typescript-eslint/no-unused-vars': ['error', { 'argsIgnorePattern': '^_' }],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_' },
+      ],
       '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/explicit-function-return-type': ['warn', {
-        'allowExpressions': true,
-        'allowTypedFunctionExpressions': true
-      }],
-      'no-console': ['warn', { allow: ['warn', 'error', 'info'] }]
+      '@typescript-eslint/explicit-function-return-type': [
+        'warn',
+        {
+          allowExpressions: true,
+          allowTypedFunctionExpressions: true,
+        },
+      ],
+      'no-console': ['warn', { allow: ['warn', 'error', 'info'] }],
     },
   },
-];
+  {
+    files: ['**/*.js'],
+    ignores: [
+      'dist/**',
+      'node_modules/**',
+      'coverage/**',
+      '*.config.js',
+      'commitlint.config.js',
+      'eslint.config.js',
+      '.husky/**',
+      'jest.config.js',
+    ],
+  },
+]
