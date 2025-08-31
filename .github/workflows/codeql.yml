@@ -46,7 +46,7 @@ jobs:
           run_install: false
 
       - name: Instalar dependências
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3

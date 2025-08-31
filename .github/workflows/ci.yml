@@ -46,7 +46,7 @@ jobs:
             ${{ runner.os }}-pnpm-store-
 
       - name: Instalar dependências
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Verificar tipos
         run: pnpm typecheck
@@ -90,7 +90,7 @@ jobs:
             ${{ runner.os }}-pnpm-store-
 
       - name: Instalar dependências
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Executar testes
         run: pnpm test
@@ -126,7 +126,7 @@ jobs:
           run_install: false
 
       - name: Instalar dependências
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Verificar vulnerabilidades
         run: pnpm audit --prod
