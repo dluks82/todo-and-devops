@@ -54,9 +54,9 @@ COPY --from=builder --chown=nodejs:nodejs /app/packages/shared/package.json ./pa
 COPY --from=builder --chown=nodejs:nodejs /app/apps/api/dist ./apps/api/dist
 COPY --from=builder --chown=nodejs:nodejs /app/packages/shared/dist ./packages/shared/dist
 
-# Instalar apenas dependências de produção
+# Instalar apenas dependências de produção (sem scripts para evitar husky/prepare)
 RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
-    HUSKY=0 pnpm install --prod --frozen-lockfile
+    pnpm install --prod --frozen-lockfile --ignore-scripts
 
 # Trocar para o usuário não-root
 USER nodejs
