@@ -18,16 +18,67 @@ O workflow de CI é executado em cada push para as branches principais e em pull
 
 - **Validação de Código**: Verifica formatação, linting e tipagem
 - **Testes**: Executa testes unitários e gera relatórios de cobertura
+- **Segurança**: Executa análise de vulnerabilidades em dependências
 
 **Arquivo**: [.github/workflows/ci.yml](../.github/workflows/ci.yml)
 
-### Build, Publicação e Deploy (CD)
+### Build e Publicação (CD)
 
-Este workflow constrói, publica imagens Docker e realiza o deploy:
+Este workflow constrói e publica imagens Docker:
 
-- Acionado apenas por pushes na branch `main`
+- Acionado apenas por pushes na branch `main` ou `develop`
 - Utiliza GitHub Container Registry para armazenar imagens
-- Aciona o webhook do Coolify para iniciar a implantação
+- Constrói usando Docker Buildx com cache otimizado
+
+**Arquivo**: [.github/workflows/ci.yml](../.github/workflows/ci.yml) (job `build-and-push-image`)
+
+### Deploy (CD)
+
+Este workflow realiza o deploy automático:
+
+- Acionado pelo sucesso do workflow de CI na branch `main`
+- Envia um webhook para o Coolify iniciar o deploy
+- Suporta autenticação via token para segurança adicional
+
+**Arquivo**: [.github/workflows/coolify-deploy.yml](../.github/workflows/coolify-deploy.yml)
+
+## Análise de Segurança
+
+O projeto também inclui um workflow dedicado para análise de segurança:
+
+- **CodeQL**: Analisa o código fonte em busca de vulnerabilidades
+- Executado em pushes para a branch `main`, pull requests e semanalmente
+- Suporta detecção de problemas em JavaScript/TypeScript
+
+**Arquivo**: [.github/workflows/codeql.yml](../.github/workflows/codeql.yml)
+
+## Configuração Local
+
+Para testar os workflows localmente antes de fazer push:
+
+1. Instale o [Act](https://github.com/nektos/act) para executar GitHub Actions localmente
+2. Execute `act push` para simular um evento de push
+3. Execute `act pull_request` para simular um pull request
+
+## Variáveis e Segredos
+
+O projeto utiliza as seguintes variáveis e segredos:
+
+### Variáveis de Ambiente
+
+- `NODE_VERSION`: Versão do Node.js (20)
+- `REGISTRY`: Registro de contêineres (ghcr.io)
+- `IMAGE_NAME`: Nome da imagem Docker
+
+### Segredos
+
+- `GITHUB_TOKEN`: Token do GitHub (automático)
+- `COOLIFY_WEBHOOK`: URL do webhook do Coolify
+- `COOLIFY_TOKEN`: Token de autenticação do Coolify (opcional)
+
+---
+
+⚠️ **Nota**: Para configurar um novo ambiente, é necessário adicionar os segredos correspondentes nas configurações do repositório no GitHub.
 
 **Arquivo**: [.github/workflows/coolify-deploy.yml](../.github/workflows/coolify-deploy.yml)
 

@@ -47,14 +47,14 @@ O projeto está configurado para deploy automático usando Coolify, uma platafor
 - **Fastify** - Framework web rápido e eficiente
 - **TypeScript** - Tipagem estática para JavaScript
 - **Zod** - Validação de schemas
-- **npm** - Gerenciador de pacotes
+- **Yarn** - Gerenciador de pacotes
 
 ## 🚀 Como Executar
 
 ### Pré-requisitos
 
 - Node.js v20+
-- npm v10+
+- Yarn v1.22+
 
 ### Instalação
 
@@ -64,30 +64,30 @@ git clone https://github.com/dluks82/todo-and-devops.git
 cd todo-and-devops
 
 # Instale as dependências
-npm install
+yarn install
 ```
 
 ### Desenvolvimento
 
 ```bash
 # Executar em modo de desenvolvimento com hot-reload
-npm run dev
+yarn dev
 
 # Build do projeto
-npm run build
+yarn build
 
-# Verificar tipos
-npm run typecheck
+# Executar testes
+yarn test
 ```
 
 ### Docker
 
 ```bash
 # Construir a imagem Docker
-npm run docker:build
+yarn docker:build
 
 # Executar o container Docker
-npm run docker:run
+yarn docker:run
 ```
 
 ### Endpoints Disponíveis
@@ -143,19 +143,19 @@ GET /health
 
 ```bash
 # Executar todos os testes
-npm test
+yarn test
 
 # Executar testes com watch mode
-npm run test:watch
+yarn test:watch
 
 # Executar testes com coverage
-npm run test:coverage
+yarn test:coverage
 ```
 
 ### Cobertura Atual
 
-- **API**: 100% de cobertura
-- **Total**: 17 testes passando
+- **API**: 100% de cobertura nos testes existentes
+- **Total**: 2 testes passando
 
 Veja o [Guia de Testes](./docs/TESTING.md) para mais detalhes.
 
@@ -168,16 +168,12 @@ Veja o [Guia de Testes](./docs/TESTING.md) para mais detalhes.
 - [Conventional Commits](./docs/COMMITS.md)
 - [CI/CD](./docs/CICD.md)
 - [Coolify](./docs/COOLIFY.md)
-- [Arquitetura](./docs/ARCHITECTURE.md) (em desenvolvimento)
-- [API Reference](./docs/API.md) (em desenvolvimento)
-
-> Nota: Os documentos marcados como "em desenvolvimento" serão adicionados nas próximas etapas do projeto.
 
 ## 🤝 Contribuição
 
 1. Fork o projeto
 2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+3. Commit suas mudanças (`git commit -m 'feat: add some amazing feature'`)
 4. Push para a branch (`git push origin feature/AmazingFeature`)
 5. Abra um Pull Request
 

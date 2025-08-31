@@ -9,74 +9,100 @@ Este documento descreve as ferramentas e configurações de qualidade de código
 - **Versão**: 9.34.0 (mais recente)
 - **Configuração**: `eslint.config.js`
 - **Propósito**: Análise estática de código JavaScript/TypeScript
-- **Uso**: `pnpm lint` ou `pnpm lint:fix`
+- **Uso**: `yarn lint` ou `yarn lint:fix`
 
 ### Prettier
 
 - **Versão**: 3.6.2 (mais recente)
 - **Configuração**: `.prettierrc`
 - **Propósito**: Formatação automática de código
-- **Uso**: `pnpm format` ou `pnpm format:check`
+- **Uso**: `yarn format` ou `yarn format:check`
 
 ### TypeScript
 
-- **Versão**: 5.9.2 (mais recente)
-- **Configuração**: `tsconfig.json` em cada pacote
+- **Versão**: 5.3.0 (mais recente)
+- **Configuração**: `tsconfig.json`
 - **Propósito**: Verificação de tipos estáticos
-- **Uso**: `pnpm typecheck`
+- **Módulo**: NodeNext com aliases de path (@/\*)
 
 ### Commitlint
 
-- **Versão**: 19.8.1 (mais recente)
+- **Versão**: 19.0.0 (mais recente)
 - **Configuração**: `commitlint.config.js`
-- **Propósito**: Validação de mensagens de commit
-- **Padrão**: Conventional Commits
+- **Propósito**: Padronizar mensagens de commit
+- **Uso**: Integrado com Husky (git commit)
 
 ### Husky
 
-- **Versão**: 9.1.7 (mais recente)
+- **Versão**: 9.0.0 (mais recente)
 - **Configuração**: `.husky/`
-- **Propósito**: Git hooks automatizados
-- **Hooks**: commit-msg (validação de commits)
+- **Propósito**: Git hooks para automação de tarefas
+- **Hooks**:
+  - `pre-commit`: Executa lint-staged
+  - `commit-msg`: Verifica mensagem de commit com commitlint
+
+### Lint-Staged
+
+- **Versão**: 15.2.9 (mais recente)
+- **Configuração**: `lint-staged` no package.json
+- **Propósito**: Executar linters apenas em arquivos staged
+- **Uso**: Automático via Husky pre-commit
 
 ### Commitizen
 
-- **Versão**: 4.3.1
+- **Versão**: 4.3.0
 - **Configuração**: `package.json`
 - **Propósito**: Interface interativa para commits
-- **Uso**: `pnpm commit`
+- **Uso**: `yarn commit`
 
-## 🚀 Scripts Disponíveis
+## �️ Estrutura do Projeto
 
-### Desenvolvimento
+### Diretórios Principais
 
-```bash
-pnpm dev:api          # Executa apenas a API
-pnpm dev              # Executa todos os serviços
+```
+todo-and-devops/
+├── src/              # Código fonte da API
+│   ├── index.ts      # Ponto de entrada da aplicação
+│   ├── routes.ts     # Definição de rotas
+│   └── types.ts      # Tipos e interfaces
+├── dist/             # Código compilado (gerado)
+├── docs/             # Documentação do projeto
+└── .github/          # GitHub Actions e configurações
 ```
 
-### Qualidade de Código
+### Aliases de Path
 
-```bash
-pnpm lint             # Verifica qualidade do código
-pnpm lint:fix         # Corrige problemas automaticamente
-pnpm format           # Formata o código
-pnpm format:check     # Verifica formatação
-pnpm typecheck        # Verifica tipos TypeScript
+O projeto utiliza aliases de path para melhorar a legibilidade das importações:
+
+```typescript
+// Ao invés de:
+import { MeuTipo } from '../../../types'
+
+// Use:
+import { MeuTipo } from '@/types'
 ```
 
-### Build e Testes
+Configuração:
 
-```bash
-pnpm build            # Compila todos os projetos
-pnpm test             # Executa testes (futuro)
-```
+- **TypeScript**: Configurado em `tsconfig.json` com `paths`
+- **Runtime**: Via `module-alias` no `index.ts`
 
-### Commits
+## 📦 Gerenciamento de Pacotes
 
-```bash
-pnpm commit           # Interface interativa para commits
-```
+O projeto utiliza o Yarn como gerenciador de pacotes:
+
+- **Versão**: 1.22.x
+- **Configuração**: `.yarnrc`
+- **Scripts**: Definidos no `package.json`
+
+### Scripts Principais
+
+- `yarn dev`: Executa o projeto em modo de desenvolvimento com hot-reload
+- `yarn build`: Compila o projeto para produção
+- `yarn start`: Inicia o projeto compilado
+- `yarn test`: Executa testes
+- `yarn lint`: Verifica problemas de código
+- `yarn format`: Formata automaticamente o código
 
 ## 📝 Padrões de Commit
 
@@ -107,55 +133,28 @@ refactor: reorganiza estrutura de pastas
 test: adiciona testes para endpoint health
 ```
 
-## 🔧 Configuração do Ambiente
+## � Workflow de Desenvolvimento
 
-### Pré-requisitos
+1. **Instalação**: `yarn install`
+2. **Desenvolvimento**: `yarn dev`
+3. **Validação**:
+   - `yarn lint`
+   - `yarn format:check`
+   - `yarn test`
+4. **Build**: `yarn build`
+5. **Verificação de Build**: `yarn start`
 
-- Node.js 18+
-- pnpm 9.0.0+
+## 🐳 Docker
 
-### Instalação
+O projeto inclui configuração Docker para desenvolvimento e produção:
 
-```bash
-# Clone o repositório
-git clone <repository-url>
-cd todo-and-devops
+- **Build**: `yarn docker:build`
+- **Execução**: `yarn docker:run`
+- **Configuração**: Multi-stage build no `Dockerfile`
 
-# Instale as dependências
-pnpm install
+---
 
-# Configure os hooks do Git
-pnpm prepare
-```
-
-### Verificação Inicial
-
-```bash
-# Verifique se tudo está funcionando
-pnpm lint
-pnpm format
-pnpm typecheck
-pnpm build
-```
-
-## 🎯 Workflow de Desenvolvimento
-
-1. **Crie uma branch** para sua feature
-2. **Desenvolva** seguindo os padrões
-3. **Execute os checks** antes de commitar:
-   ```bash
-   pnpm lint
-   pnpm format
-   pnpm typecheck
-   ```
-4. **Faça o commit** usando o commitizen:
-   ```bash
-   pnpm commit
-   ```
-5. **Push** para sua branch
-6. **Abra um Pull Request**
-
-## 🚨 Troubleshooting
+⚠️ **Nota**: Mantenha este documento atualizado conforme o projeto evolui.
 
 ### ESLint não encontra configuração
 
