@@ -8,6 +8,9 @@ on:
   schedule:
     - cron: '0 2 * * 1' # Executar toda segunda-feira às 2h da manhã
 
+env:
+  PNPM_VERSION: 10.15.0
+
 jobs:
   analyze:
     name: Analyze
@@ -27,7 +30,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v2
+        uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
 
@@ -39,11 +42,11 @@ jobs:
       - name: Configurar PNPM
         uses: pnpm/action-setup@v3
         with:
-          version: '9.0.0'
+          version: ${{ env.PNPM_VERSION }}
           run_install: false
 
       - name: Instalar dependências
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v2
+        uses: github/codeql-action/analyze@v3
