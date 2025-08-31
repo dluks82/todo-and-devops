@@ -52,6 +52,9 @@ COPY --from=builder --chown=nodejs:nodejs /app/package.json /app/pnpm-lock.yaml 
 COPY --from=builder --chown=nodejs:nodejs /app/apps/api/package.json ./apps/api/
 COPY --from=builder --chown=nodejs:nodejs /app/packages/shared/package.json ./packages/shared/
 COPY --from=builder --chown=nodejs:nodejs /app/apps/api/dist ./apps/api/dist
+
+# Verifica se o artefato de build existe (falha cedo se não houver)
+RUN test -f /app/apps/api/dist/index.js || (echo 'ERRO: apps/api/dist/index.js não encontrado' && ls -R /app/apps/api && exit 1)
 COPY --from=builder --chown=nodejs:nodejs /app/packages/shared/dist ./packages/shared/dist
 
 # Instalar apenas dependências de produção (sem scripts para evitar husky/prepare)
@@ -65,7 +68,7 @@ USER nodejs
 EXPOSE 3000
 
 # Iniciar a aplicação
-CMD ["node", "apps/api/dist/index.js"]
+CMD ["node", "/app/apps/api/dist/index.js"]
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
