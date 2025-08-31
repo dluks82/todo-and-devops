@@ -1,7 +1,9 @@
 FROM node:20-alpine AS builder
 
 # Instalar pnpm
-RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
+RUN corepack enable && corepack prepare pnpm@10.15.0 --activate
+ENV PNPM_HOME=/usr/local/pnpm
+ENV PATH=$PNPM_HOME:$PATH
 
 # Configurar diretório de trabalho
 WORKDIR /app
@@ -17,7 +19,8 @@ COPY apps/api/tsconfig.json ./apps/api/
 COPY packages/shared/tsconfig.json ./packages/shared/
 
 # Instalar dependências
-RUN pnpm install --frozen-lockfile
+RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile
 
 # Copiar código fonte
 COPY types/ ./types/
@@ -36,6 +39,11 @@ ENV NODE_ENV=production
 # Criar usuário não-root para segurança
 RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001 -G nodejs
 
+# Instalar pnpm
+RUN corepack enable && corepack prepare pnpm@10.15.0 --activate
+ENV PNPM_HOME=/usr/local/pnpm
+ENV PATH=$PNPM_HOME:$PATH
+
 # Configurar diretório de trabalho
 WORKDIR /app
 
@@ -47,8 +55,8 @@ COPY --from=builder --chown=nodejs:nodejs /app/apps/api/dist ./apps/api/dist
 COPY --from=builder --chown=nodejs:nodejs /app/packages/shared/dist ./packages/shared/dist
 
 # Instalar apenas dependências de produção
-RUN corepack enable && corepack prepare pnpm@9.0.0 --activate && \
-    pnpm install --prod --frozen-lockfile
+RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
+    HUSKY=0 pnpm install --prod --frozen-lockfile
 
 # Trocar para o usuário não-root
 USER nodejs
