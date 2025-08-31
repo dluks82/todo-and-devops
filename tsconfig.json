@@ -9,12 +9,14 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "forceConsistentCasingInFileNames": true,
-    "types": ["node", "jest"],
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
     "allowSyntheticDefaultImports": true,
     "sourceMap": true,
+    "declaration": true,
     "outDir": "dist",
     "rootDir": "src"
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/__tests__/**"]
+  "exclude": ["node_modules", "dist"]
 }
