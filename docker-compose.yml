@@ -1,0 +1,25 @@
+services:
+  api-dev:
+    build:
+      context: .
+      target: dev
+    ports: ['3000:3000']
+    environment:
+      - PORT=3000
+      - NODE_ENV=development
+    volumes:
+      - .:/app
+      - app_node_modules:/app/node_modules
+
+  api:
+    build:
+      context: .
+      target: prod
+    ports: ['3000:3000']
+    environment:
+      - PORT=3000
+      - NODE_ENV=production
+    restart: unless-stopped
+
+volumes:
+  app_node_modules: {}

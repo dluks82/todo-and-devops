@@ -1,17 +1,12 @@
-import { routes } from '@/routes'
-import { FastifyInstance } from 'fastify'
+import { buildApp } from '../server'
 
-describe('Health Check', () => {
-  let app: FastifyInstance
-
-  beforeEach(() => {
-    app = {
-      get: jest.fn(),
-    } as unknown as FastifyInstance
-  })
-
-  it('should register the health endpoint', () => {
-    routes(app)
-    expect(app.get).toHaveBeenCalledWith('/health', expect.any(Function))
+describe('Health endpoint', () => {
+  it('GET /health should return status ok', async () => {
+    const app = buildApp()
+    const res = await app.inject({ method: 'GET', url: '/health' })
+    expect(res.statusCode).toBe(200)
+    const payload = res.json() as { status: string }
+    expect(payload.status).toBe('ok')
+    await app.close()
   })
 })
