@@ -1,6 +1,6 @@
 import Fastify, { FastifyInstance } from 'fastify'
 import cors from '@fastify/cors'
-import { routes } from './routes'
+import { routes } from './routes.js'
 
 const app: FastifyInstance = Fastify({ logger: true })
 

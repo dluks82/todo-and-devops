@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify'
-import { HealthCheckResult } from '../../../packages/shared/src'
+import { HealthCheckResult } from '../../../packages/shared/src/index.js'
 
 export async function routes(app: FastifyInstance) {
   app.get('/health', async (): Promise<HealthCheckResult> => {

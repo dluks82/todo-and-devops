@@ -2,10 +2,10 @@
   "name": "@todo-and-devops/shared",
   "version": "0.0.1",
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "scripts": {
-    "build": "pnpm exec tsc -p tsconfig.json",
+    "build": "rm -rf dist && pnpm exec tsc -p tsconfig.json",
     "typecheck": "pnpm exec tsc -p tsconfig.json --noEmit",
     "lint": "echo \"(lint shared)\"",
     "format": "echo \"(format shared)\"",

@@ -8,27 +8,30 @@ ENV PATH=$PNPM_HOME:$PATH
 # Configurar diretório de trabalho
 WORKDIR /app
 
-# Copiar arquivos de configuração necessários para a build
+# Copiar todos os arquivos de configuração necessários para a build
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/api/package.json ./apps/api/
 COPY packages/shared/package.json ./packages/shared/
-
-# Copiar arquivos de configuração do TypeScript
 COPY tsconfig.json ./
 COPY apps/api/tsconfig.json ./apps/api/
 COPY packages/shared/tsconfig.json ./packages/shared/
+COPY types/ ./types/
 
 # Instalar dependências
 RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
     pnpm install --frozen-lockfile
 
 # Copiar código fonte
-COPY types/ ./types/
 COPY packages/shared/src/ ./packages/shared/src/
 COPY apps/api/src/ ./apps/api/src/
 
-# Compilar o projeto
-RUN pnpm -r build
+# Compilar o projeto (primeiro o shared, depois a api)
+RUN pnpm --filter @todo-and-devops/shared build && \
+    pnpm --filter @todo-and-devops/api build
+
+# Verificar se os arquivos de build foram gerados corretamente
+RUN ls -la packages/shared/dist && \
+    ls -la apps/api/dist
 
 # Imagem final
 FROM node:20-alpine AS runner

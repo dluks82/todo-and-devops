@@ -10,7 +10,12 @@
   "scripts": {
     "dev:api": "pnpm --filter @todo-and-devops/api dev",
     "dev": "pnpm -r --parallel dev",
-    "build": "pnpm -r build",
+    "build": "pnpm --filter @todo-and-devops/shared build && pnpm --filter @todo-and-devops/api build",
+    "build:test": "rm -rf apps/api/dist packages/shared/dist && pnpm build && pnpm test:dist",
+    "test:dist": "node -e \"console.log('\\n✅ Verificando arquivos de build...'); const fs=require('fs'); ['packages/shared/dist/src/index.js', 'packages/shared/dist/src/index.d.ts', 'apps/api/dist/index.js', 'apps/api/dist/routes.js'].forEach(f => { if(fs.existsSync(f)) { console.log('✅ ' + f + ' existe') } else { console.error('❌ ' + f + ' não encontrado'); process.exit(1); } })\"",
+    "docker:test": "docker build -f apps/api/Dockerfile -t todo-api-test .",
+    "docker:run": "docker run -p 3000:3000 --rm todo-api-test",
+    "test:build": "chmod +x ./scripts/test-build.sh && ./scripts/test-build.sh",
     "typecheck": "pnpm -r typecheck",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
