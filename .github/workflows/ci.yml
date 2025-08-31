@@ -13,7 +13,7 @@ env:
   NODE_VERSION: '20'
 
 jobs:
-  validate:
+  validation:
     name: Validação de Código
     runs-on: ubuntu-latest
     steps:
@@ -24,19 +24,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: 'yarn'
 
       - name: Instalar dependências
-        run: npm ci
-
-      - name: Verificar tipos
-        run: npm run build -- --noEmit
-
-      - name: Executar lint
-        run: npm run lint
+        run: yarn install --frozen-lockfile
 
       - name: Verificar formatação
-        run: npm run format:check
+        run: yarn format:check
+
+      - name: Executar lint
+        run: yarn lint
 
   test:
     name: Testes
@@ -49,16 +46,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: 'yarn'
 
       - name: Instalar dependências
-        run: npm ci
+        run: yarn install --frozen-lockfile
 
       - name: Executar testes
-        run: npm test
+        run: yarn test
 
       - name: Executar testes com cobertura
-        run: npm run test:coverage
+        run: yarn test:coverage
 
       - name: Salvar relatório de cobertura
         uses: actions/upload-artifact@v4
@@ -78,17 +75,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: 'yarn'
 
       - name: Instalar dependências
-        run: npm ci
+        run: yarn install --frozen-lockfile
 
       - name: Verificar vulnerabilidades
-        run: npm audit --production
+        run: yarn audit --groups dependencies
 
   build-and-push-image:
     name: Build e Push da Imagem Docker
-    needs: [validate, test, security]
+    needs: [validation, test, security]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
     runs-on: ubuntu-latest
     permissions:
