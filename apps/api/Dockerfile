@@ -52,10 +52,10 @@ COPY --from=builder --chown=nodejs:nodejs /app/package.json /app/pnpm-lock.yaml 
 COPY --from=builder --chown=nodejs:nodejs /app/apps/api/package.json ./apps/api/
 COPY --from=builder --chown=nodejs:nodejs /app/packages/shared/package.json ./packages/shared/
 COPY --from=builder --chown=nodejs:nodejs /app/apps/api/dist ./apps/api/dist
-
-# Verifica se o artefato de build existe (falha cedo se não houver)
-RUN test -f /app/apps/api/dist/index.js || (echo 'ERRO: apps/api/dist/index.js não encontrado' && ls -R /app/apps/api && exit 1)
 COPY --from=builder --chown=nodejs:nodejs /app/packages/shared/dist ./packages/shared/dist
+
+# Verifica se o artefato de build existe (após as cópias)
+RUN test -f apps/api/dist/index.js || (echo 'ERRO: apps/api/dist/index.js não encontrado' && ls -R apps/api && exit 1)
 
 # Instalar apenas dependências de produção (sem scripts para evitar husky/prepare)
 RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
