@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify'
-import { HealthCheckResult } from '../../../packages/shared/src'
+import { HealthCheckResult, VERSION } from './types'
 
 export async function routes(app: FastifyInstance) {
   app.get('/health', async (): Promise<HealthCheckResult> => {
@@ -7,7 +7,7 @@ export async function routes(app: FastifyInstance) {
       status: 'ok',
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
-      version: '1.0.0',
+      version: VERSION,
       environment: process.env.NODE_ENV || 'development',
     }
   })

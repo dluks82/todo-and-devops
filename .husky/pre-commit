@@ -1,2 +1,0 @@
-# Auto-fix em arquivos staged com lint-staged
-pnpm exec lint-staged

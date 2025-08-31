@@ -1,6 +1,9 @@
-import pkg from '../package.json'
-export const VERSION = pkg.version
-export const PROJECT_NAME = 'Todo & DevOps'
+/**
+ * Tipos e constantes para a API
+ */
+
+export const VERSION = '0.0.1'
+export const PROJECT_NAME = 'Todo & DevOps API'
 
 export type Status = 'ok' | 'error' | 'pending'
 
