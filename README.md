@@ -18,6 +18,10 @@
 
 API mínima em Fastify + TypeScript, com ambiente de desenvolvimento via `tsx`, build com `tsc`, testes com Jest e Docker multi-stage.
 
+### 📋 Guia de Desenvolvimento
+
+Para detalhes sobre o fluxo de desenvolvimento, configuração do ambiente e comandos disponíveis, consulte o [Guia de Desenvolvimento](docs/DESENVOLVIMENTO.md).
+
 ### 🏗️ Estrutura
 
 ```code
