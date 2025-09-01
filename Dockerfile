@@ -13,6 +13,7 @@ FROM base AS build
 COPY --from=deps /app/node_modules ./node_modules
 COPY package*.json ./
 COPY tsconfig.json ./
+COPY .env* ./
 COPY src ./src
 RUN npm run build
 
@@ -26,6 +27,7 @@ FROM node:20-alpine AS dev
 WORKDIR /app
 ENV NODE_ENV=development
 COPY package*.json tsconfig.json ./
+COPY .env* ./
 # Install once during build (cached)
 RUN npm ci
 COPY src ./src
@@ -37,8 +39,11 @@ CMD ["sh", "-c", "if [ ! -d node_modules ] || [ -z \"$(ls -A node_modules 2>/dev
 FROM node:20-alpine AS prod
 WORKDIR /app
 ENV NODE_ENV=production
+# Configuração default para produção caso não seja passada via env
+ENV PORT=3010
 COPY --from=prod-deps /app/node_modules ./node_modules
 COPY package*.json ./
+COPY .env* ./
 COPY --from=build /app/dist ./dist
 RUN apk add --no-cache wget
 # Drop privileges
