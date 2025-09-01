@@ -21,20 +21,22 @@ jobs:
       - name: Aguardar disponibilidade da imagem (curto)
         run: sleep 10
       - name: Acionar deploy no Coolify
-        env:
-          COOLIFY_WEBHOOK: ${{ secrets.COOLIFY_WEBHOOK }}
-          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
         run: |
           set -euo pipefail
-          if [ -z "${COOLIFY_WEBHOOK:-}" ]; then
+          if [ -z "${{ secrets.COOLIFY_WEBHOOK }}" ]; then
             echo "COOLIFY_WEBHOOK não configurado" >&2
             exit 1
           fi
-          # Usar método GET conforme documentação oficial do Coolify
-          if [ -n "${COOLIFY_TOKEN:-}" ]; then
-            curl -sS -X GET "$COOLIFY_WEBHOOK" \
-              -H "Authorization: Bearer $COOLIFY_TOKEN" \
-              --fail-with-body
+          if [ -n "${{ secrets.COOLIFY_TOKEN }}" ]; then
+            echo "::add-mask::${{ secrets.COOLIFY_TOKEN }}"
+            echo "Disparando webhook (com Authorization)..."
+            curl -sS -X GET "${{ secrets.COOLIFY_WEBHOOK }}" \
+              -H "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}" \
+              --fail-with-body \
+              -w "\nHTTP %{http_code}\n"
           else
-            curl -sS -X GET "$COOLIFY_WEBHOOK" --fail-with-body
+            echo "Disparando webhook (sem Authorization)..."
+            curl -sS -X GET "${{ secrets.COOLIFY_WEBHOOK }}" \
+              --fail-with-body \
+              -w "\nHTTP %{http_code}\n"
           fi
