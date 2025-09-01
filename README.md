@@ -4,7 +4,7 @@
 [![CodeQL](https://github.com/dluks82/todo-and-devops/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/dluks82/todo-and-devops/actions/workflows/codeql.yml)
 [![Coolify Deploy](https://github.com/dluks82/todo-and-devops/actions/workflows/coolify-deploy.yml/badge.svg?branch=main)](https://github.com/dluks82/todo-and-devops/actions/workflows/coolify-deploy.yml)
 [![GHCR](https://img.shields.io/badge/ghcr.io%2Fdluks82%2Ftodo--and--devops--api-available-blue?logo=github)](https://github.com/dluks82?tab=packages&repo_name=todo-and-devops)
-[![API](https://img.shields.io/website?url=https%3A%2F%2Fapi-todoanddevops.11051982.xyz%2Fhealth&up_message=online&down_message=offline)](https://api-todoanddevops.11051982.xyz/health)
+[![API](https://img.shields.io/website?url=https%3A%2F%2Fapi-todoanddevops.11051982.xyz%2Fhealth&label=API&up_message=online&down_message=offline)](https://api-todoanddevops.11051982.xyz/health)
 [![License](https://img.shields.io/github/license/dluks82/todo-and-devops)](LICENSE)
 [![Release](https://img.shields.io/github/v/tag/dluks82/todo-and-devops?label=release&sort=semver)](https://github.com/dluks82/todo-and-devops/tags)
 ![Node](https://img.shields.io/badge/node-20%2B-339933?logo=node.js&logoColor=white)
@@ -55,15 +55,15 @@ Exemplos
 
 ```bash
 # Pull da última imagem da main
-docker pull ghcr.io/<owner>/<repo>-api:latest
+docker pull ghcr.io/dluks82/todo-and-devops-api:latest
 
 # Pull da imagem do branch develop
-docker pull ghcr.io/<owner>/<repo>-api:develop
+docker pull ghcr.io/dluks82/todo-and-devops-api:develop
 
 # Pull por versão (exige tag git v1.2.3 publicada)
-docker pull ghcr.io/<owner>/<repo>-api:v1.2.3
-docker pull ghcr.io/<owner>/<repo>-api:v1.2
-docker pull ghcr.io/<owner>/<repo>-api:v1
+docker pull ghcr.io/dluks82/todo-and-devops-api:v1.2.3
+docker pull ghcr.io/dluks82/todo-and-devops-api:v1.2
+docker pull ghcr.io/dluks82/todo-and-devops-api:v1
 ```
 
 ## 🚀 Como Executar
@@ -92,23 +92,31 @@ npm test
 
 ### Docker / Compose
 
-```bash
+````bash
 # Dev com hot-reload (volume nomeado de node_modules)
 docker compose up --build api-dev
 
 # Produção (imagem prod com healthcheck em /health)
 docker compose up --build api
 
+# Portas utilizadas
+# API em desenvolvimento: 3000 (host) -> 3010 (container)
+# API em produção: 3010 (container)
+
 # Build manual da imagem prod
+```bash
 docker build --target prod -t todo-and-devops-api:prod .
-docker run -p 3000:3000 --rm todo-and-devops-api:prod
-```
+docker run -p 3000:3010 --rm todo-and-devops-api:prod
+
+# Execução usando imagem do GHCR
+docker run -p 3000:3010 --rm ghcr.io/dluks82/todo-and-devops-api:latest
+````
 
 ## 🔗 Endpoints Disponíveis
 
 ### Health Check
 
-```
+```http
 GET /health
 ```
 
