@@ -17,7 +17,17 @@
     "prepare": "husky",
     "commit": "git-cz",
     "docker:build": "docker build -t todo-and-devops-api .",
-    "docker:run": "docker run -p 3000:3010 --rm todo-and-devops-api"
+    "docker:run": "docker run -p 3000:3010 --env-file .env --rm todo-and-devops-api",
+    "docker:run:prod": "docker run -p 3000:3010 -e NODE_ENV=production --rm todo-and-devops-api",
+    "docker:dev": "docker-compose up api-dev",
+    "docker:dev:build": "docker-compose build api-dev && docker-compose up api-dev",
+    "docker:dev:detach": "docker-compose up -d api-dev",
+    "docker:dev:logs": "docker-compose logs -f api-dev",
+    "docker:prod": "docker-compose up api",
+    "docker:prod:build": "docker-compose build api && docker-compose up api",
+    "docker:prod:detach": "docker-compose up -d api",
+    "docker:prod:logs": "docker-compose logs -f api",
+    "docker:stop": "docker-compose down"
   },
   "dependencies": {
     "dotenv": "^17.2.1",
