@@ -6,7 +6,7 @@ describe('Root endpoint', () => {
     const res = await app.inject({ method: 'GET', url: '/' })
     expect(res.statusCode).toBe(200)
     const payload = res.json() as { hello: string }
-    expect(payload.hello).toBe('ts-world')
+    expect(payload.hello).toBe('todo-and-devops-api')
     await app.close()
   })
 })
