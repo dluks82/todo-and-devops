@@ -1,11 +1,8 @@
 name: Deploy com Coolify
 
 on:
-  workflow_run:
-    workflows: ['Continuous Integration']
-    branches: [main]
-    types:
-      - completed
+  # Deixa como fallback manual para evitar deploy duplicado
+  workflow_dispatch:
 
 concurrency:
   group: coolify-deploy-${{ github.ref }}
@@ -13,13 +10,10 @@ concurrency:
 
 jobs:
   deploy:
-    name: Deploy no Coolify
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    name: Deploy no Coolify (manual)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Aguardar disponibilidade da imagem (curto)
-        run: sleep 10
       - name: Acionar deploy no Coolify
         run: |
           set -euo pipefail

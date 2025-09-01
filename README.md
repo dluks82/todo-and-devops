@@ -4,6 +4,13 @@
 [![CodeQL](https://github.com/dluks82/todo-and-devops/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/dluks82/todo-and-devops/actions/workflows/codeql.yml)
 [![Coolify Deploy](https://github.com/dluks82/todo-and-devops/actions/workflows/coolify-deploy.yml/badge.svg?branch=main)](https://github.com/dluks82/todo-and-devops/actions/workflows/coolify-deploy.yml)
 [![GHCR](https://img.shields.io/badge/ghcr.io%2Fdluks82%2Ftodo--and--devops--api-available-blue?logo=github)](https://github.com/dluks82?tab=packages&repo_name=todo-and-devops)
+[![API](https://img.shields.io/website?url=https%3A%2F%2Fapi-todoanddevops.11051982.xyz%2Fhealth&up_message=online&down_message=offline)](https://api-todoanddevops.11051982.xyz/health)
+[![License](https://img.shields.io/github/license/dluks82/todo-and-devops)](LICENSE)
+[![Release](https://img.shields.io/github/v/tag/dluks82/todo-and-devops?label=release&sort=semver)](https://github.com/dluks82/todo-and-devops/tags)
+![Node](https://img.shields.io/badge/node-20%2B-339933?logo=node.js&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)
+[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-orange.svg)](https://conventionalcommits.org)
+[![Prettier](https://img.shields.io/badge/code%20style-prettier-ff69b4.svg)](https://prettier.io)
 
 > API de exemplo focada em práticas de DevOps: testes, build, containerização e compose de dev/prod.
 
@@ -18,7 +25,7 @@ todo-and-devops/
 ├── src/
 │   └── server.ts     # Ponto de entrada e rotas básicas
 ├── dist/             # Código compilado (gerado)
-├── docs/             # Documentação do projeto
+├── docs/             # (Opcional) Documentação adicional
 ├── Dockerfile        # Build multi-stage (dev/prod)
 ├── docker-compose.yml# Compose para dev e prod
 └── README.md
@@ -120,10 +127,7 @@ npm run test:watch
 npm run test:coverage
 ```
 
-## 📚 Documentação
-
-- [CI/CD](docs/CICD.md)
-- [Coolify](docs/COOLIFY.md)
+<!-- Sem documentação adicional no momento -->
 
 ## 📄 Licença
 
