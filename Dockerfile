@@ -29,7 +29,7 @@ COPY package*.json tsconfig.json ./
 # Install once during build (cached)
 RUN npm ci
 COPY src ./src
-EXPOSE 3000
+EXPOSE 3010
 # Ensure deps in named volume on first run, then start
 CMD ["sh", "-c", "if [ ! -d node_modules ] || [ -z \"$(ls -A node_modules 2>/dev/null)\" ]; then npm ci; fi; npm run dev"]
 
@@ -43,7 +43,7 @@ COPY --from=build /app/dist ./dist
 RUN apk add --no-cache wget
 # Drop privileges
 USER node
-EXPOSE 3000
+EXPOSE 3010
 HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
-  CMD wget -qO- http://127.0.0.1:3000/health || exit 1
+    CMD wget -qO- http://127.0.0.1:3010/health || exit 1
 CMD ["npm", "start"]
