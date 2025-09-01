@@ -12,11 +12,15 @@
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-orange.svg)](https://conventionalcommits.org)
 [![Prettier](https://img.shields.io/badge/code%20style-prettier-ff69b4.svg)](https://prettier.io)
 
-> API de exemplo focada em práticas de DevOps: testes, build, containerização e compose de dev/prod.
+> API de exemplo focada em práticas de DevOps: testes, build, containerização e compose de dev/prod com suporte a variáveis de ambiente.
 
 ## 🚀 Sobre o Projeto
 
-API mínima em Fastify + TypeScript, com ambiente de desenvolvimento via `tsx`, build com `tsc`, testes com Jest e Docker multi-stage.
+API mínima em Fastify + TypeScript, com ambiente de desenvolvimento via `tsx`, build com `tsc`, testes com Jest e Docker multi-stage. O projeto inclui configuração completa para desenvolvimento com Docker, suporte a variáveis de ambiente via `.env` e scripts de conveniência para operações comuns.
+
+### 📋 Guia de Desenvolvimento
+
+Para detalhes sobre o fluxo de desenvolvimento, configuração do ambiente e comandos disponíveis, consulte o [Guia de Desenvolvimento](docs/DESENVOLVIMENTO.md).
 
 ### 🏗️ Estrutura
 
@@ -25,15 +29,52 @@ todo-and-devops/
 ├── src/
 │   └── server.ts     # Ponto de entrada e rotas básicas
 ├── dist/             # Código compilado (gerado)
-├── docs/             # (Opcional) Documentação adicional
+├── docs/             # Documentação adicional
+│   └── DESENVOLVIMENTO.md # Guia de fluxo de desenvolvimento
+├── .env              # Variáveis de ambiente (local)
+├── .env.example      # Exemplo de variáveis de ambiente
 ├── Dockerfile        # Build multi-stage (dev/prod)
 ├── docker-compose.yml# Compose para dev e prod
 └── README.md
 ```
 
-### Integração e Entrega Contínua
+### 🔧 Configuração com Variáveis de Ambiente
 
-O projeto utiliza GitHub Actions para automação de processos de CI/CD.
+O projeto utiliza o pacote `dotenv` para gerenciar variáveis de ambiente. As principais configurações são:
+
+- `PORT`: Porta em que o servidor será executado (padrão: 3010)
+- `NODE_ENV`: Ambiente de execução (`development`, `test`, `production`)
+
+### 🚀 Início Rápido
+
+Para começar a desenvolver rapidamente:
+
+1. Clone o repositório:
+
+   ```bash
+   git clone https://github.com/dluks82/todo-and-devops.git
+   cd todo-and-devops
+   ```
+
+2. Inicie o ambiente de desenvolvimento com Docker:
+
+   ```bash
+   npm run docker:dev
+   ```
+
+3. Acesse a API:
+   - Endpoint principal: `http://localhost:3000`
+   - Verificação de saúde: `http://localhost:3000/health`
+
+Veja o [Guia de Desenvolvimento](docs/DESENVOLVIMENTO.md) para mais opções.
+
+### 🐳 Docker
+
+O projeto inclui configurações Docker otimizadas para desenvolvimento e produção:
+
+- **Ambiente de Desenvolvimento**: Hot-reload com montagem de volumes para desenvolvimento em tempo real
+- **Ambiente de Produção**: Imagem otimizada e leve com apenas as dependências necessárias
+- **Scripts de Conveniência**: Diversos comandos npm para facilitar operações com Docker
 
 ## 🛠️ Tecnologias Utilizadas
 
@@ -43,100 +84,12 @@ O projeto utiliza GitHub Actions para automação de processos de CI/CD.
 - ESLint + Prettier
 - tsx (dev server com hot-reload)
 - Docker + Compose
-
-## 🏷️ Tags da Imagem Docker
-
-- latest: gerada no branch padrão (main).
-- <branch>: tag com o nome do branch (ex.: develop).
-- <sha>: tag com o short SHA do commit (ex.: sha-abcdef1).
-- vX.Y.Z, vX.Y, vX: geradas ao criar tags Git no formato vX.Y.Z.
-
-Exemplos
-
-```bash
-# Pull da última imagem da main
-docker pull ghcr.io/dluks82/todo-and-devops-api:latest
-
-# Pull da imagem do branch develop
-docker pull ghcr.io/dluks82/todo-and-devops-api:develop
-
-# Pull por versão (exige tag git v1.2.3 publicada)
-docker pull ghcr.io/dluks82/todo-and-devops-api:v1.2.3
-docker pull ghcr.io/dluks82/todo-and-devops-api:v1.2
-docker pull ghcr.io/dluks82/todo-and-devops-api:v1
-```
-
-## 🚀 Como Executar
-
-### Pré-requisitos
-
-- Node.js v20+
-- Docker (opcional para dev/prod com compose)
-
-### Instalação e Desenvolvimento (local)
-
-```bash
-git clone https://github.com/dluks82/todo-and-devops.git
-cd todo-and-devops
-npm ci
-
-# Dev com hot-reload (tsx)
-npm run dev
-
-# Build TypeScript
-npm run build
-
-# Testes
-npm test
-```
-
-### Docker / Compose
-
-````bash
-# Dev com hot-reload (volume nomeado de node_modules)
-docker compose up --build api-dev
-
-# Produção (imagem prod com healthcheck em /health)
-docker compose up --build api
-
-# Portas utilizadas
-# API em desenvolvimento: 3000 (host) -> 3010 (container)
-# API em produção: 3010 (container)
-
-# Build manual da imagem prod
-```bash
-docker build --target prod -t todo-and-devops-api:prod .
-docker run -p 3000:3010 --rm todo-and-devops-api:prod
-
-# Execução usando imagem do GHCR
-docker run -p 3000:3010 --rm ghcr.io/dluks82/todo-and-devops-api:latest
-````
-
-## 🔗 Endpoints Disponíveis
-
-### Health Check
-
-```http
-GET /health
-```
-
-Resposta: `{ "status": "ok" }`
-
-## 🧪 Testes
-
-```bash
-# Executar todos os testes
-npm test
-
-# Watch mode
-npm run test:watch
-
-# Coverage
-npm run test:coverage
-```
-
-<!-- Sem documentação adicional no momento -->
+- dotenv (gerenciamento de variáveis de ambiente)
 
 ## 📄 Licença
 
-Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE).
+Este projeto está licenciado sob a licença MIT - consulte o arquivo [LICENSE](LICENSE) para obter detalhes.
+
+## 👤 Autor
+
+[Diogo Oliveira](https://github.com/dluks82)
