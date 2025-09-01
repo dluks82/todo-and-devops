@@ -1,4 +1,5 @@
 import Fastify, { FastifyInstance } from 'fastify'
+import 'dotenv/config'
 
 type HealthResponse = { status: 'ok' }
 type RootResponse = { hello: string }
