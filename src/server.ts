@@ -7,7 +7,9 @@ export function buildApp(): FastifyInstance {
   const app = Fastify({ logger: true })
 
   app.get<{ Reply: HealthResponse }>('/health', () => ({ status: 'ok' }))
-  app.get<{ Reply: RootResponse }>('/', () => ({ hello: 'ts-world' }))
+  app.get<{ Reply: RootResponse }>('/', () => ({
+    hello: 'todo-and-devops-api',
+  }))
 
   return app
 }
