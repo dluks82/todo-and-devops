@@ -18,7 +18,7 @@ todo-and-devops/
 ├── src/
 │   └── server.ts     # Ponto de entrada e rotas básicas
 ├── dist/             # Código compilado (gerado)
-├── docs/             # Documentação do projeto
+├── docs/             # (Opcional) Documentação adicional
 ├── Dockerfile        # Build multi-stage (dev/prod)
 ├── docker-compose.yml# Compose para dev e prod
 └── README.md
@@ -120,10 +120,7 @@ npm run test:watch
 npm run test:coverage
 ```
 
-## 📚 Documentação
-
-- [CI/CD](docs/CICD.md)
-- [Coolify](docs/COOLIFY.md)
+<!-- Sem documentação adicional no momento -->
 
 ## 📄 Licença
 
