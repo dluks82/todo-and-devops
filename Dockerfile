@@ -33,7 +33,7 @@ RUN npm ci
 COPY src ./src
 EXPOSE 3010
 # Ensure deps in named volume on first run, then start
-CMD ["sh", "-c", "if [ ! -d node_modules ] || [ -z \"$(ls -A node_modules 2>/dev/null)\" ]; then npm ci; fi; npm run dev"]
+CMD ["sh", "-c", "npm ci && npm run dev"]
 
 # ---- prod ----
 FROM node:20-alpine AS prod
