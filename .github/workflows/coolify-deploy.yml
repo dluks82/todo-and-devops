@@ -44,7 +44,7 @@ jobs:
           format: markdown
           disable_web_page_preview: true
           message: |
-            🚀 *Deploy Manual Realizado com Sucesso*
+            � *Deploy Manual Realizado com Sucesso*
 
             *Ambiente*: Coolify
             *Branch*: [`${{ github.ref_name }}`](${{ github.server_url }}/${{ github.repository }}/tree/${{ github.ref_name }})
