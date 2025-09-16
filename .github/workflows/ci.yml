@@ -72,7 +72,7 @@ jobs:
           format: markdown
           disable_web_page_preview: true
           message: |
-            � *Pipeline iniciada*
+            🔄 *Pipeline iniciada*
 
             ${{ github.event_name == 'pull_request' && format('*PR*: [#{0} – {1}]({2})', github.event.pull_request.number, github.event.pull_request.title, github.event.pull_request.html_url) || '' }}
             *Branch*: [`${{ steps.context.outputs.branch_name }}`](${{ steps.context.outputs.branch_url }})
@@ -479,7 +479,7 @@ jobs:
           format: markdown
           disable_web_page_preview: true
           message: |
-            � *Resumo da Pipeline*
+            📊 *Resumo da Pipeline*
 
             *Branch*: [`${{ steps.context.outputs.branch_name }}`](${{ steps.context.outputs.branch_url }})
             *Status*: ${{ steps.context.outputs.pipeline_status }}
