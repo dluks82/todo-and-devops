@@ -1,0 +1,213 @@
+name: Telegram Notifications (Consolidated)
+
+on:
+  pull_request:
+    types: [opened, reopened, closed]
+  push:
+    branches-ignore:
+      - main
+      - develop
+  workflow_run:
+    workflows: ['Continuous Integration']
+    types: [completed]
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: telegram-notify-${{ github.event_name }}-${{ github.run_id || github.run_number }}
+  cancel-in-progress: false
+
+jobs:
+  pr_open_reopen:
+    if: ${{ github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Notificar PR aberto/reaberto
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+        run: |
+          BRANCH_NAME="${{ github.head_ref || github.ref_name }}"
+          BRANCH_URL="${{ github.server_url }}/${{ github.repository }}/tree/$BRANCH_NAME"
+          MESSAGE_LINES=(
+            "🆕 *PR aberto*"
+            ""
+            "*PR*: [#${{ github.event.pull_request.number }} – ${{ github.event.pull_request.title }}](${{ github.event.pull_request.html_url }})"
+            "*Autor*: ${{ github.actor }}"
+            "*Branch*: [\`$BRANCH_NAME\`]($BRANCH_URL)"
+            ""
+            "[Ver Alterações](${{ github.event.pull_request.html_url }}/files) | [Ver PR](${{ github.event.pull_request.html_url }})"
+          )
+          MESSAGE=$(printf '%s\n' "${MESSAGE_LINES[@]}")
+
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d text="${MESSAGE}" \
+            -d parse_mode="Markdown"
+
+  pr_merged:
+    if: ${{ github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Notificar PR mesclado
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+        run: |
+          BRANCH_NAME="${{ github.head_ref || github.ref_name }}"
+          BRANCH_URL="${{ github.server_url }}/${{ github.repository }}/tree/$BRANCH_NAME"
+          MESSAGE_LINES=(
+            "🎉 *PR mesclado*"
+            ""
+            "*PR*: [#${{ github.event.pull_request.number }} – ${{ github.event.pull_request.title }}](${{ github.event.pull_request.html_url }})"
+            "*Mesclado por*: ${{ github.actor }}"
+            "*Branch*: [\`$BRANCH_NAME\`]($BRANCH_URL) → \`${{ github.event.pull_request.base.ref }}\`"
+            ""
+            "[Ver PR](${{ github.event.pull_request.html_url }})"
+          )
+          MESSAGE=$(printf '%s\n' "${MESSAGE_LINES[@]}")
+
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d text="${MESSAGE}" \
+            -d parse_mode="Markdown"
+
+  push_commit_to_pr:
+    if: ${{ github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Detectar PR associado ao branch e notificar
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          OWNER_REPO="${{ github.repository }}"
+          OWNER="${OWNER_REPO%%/*}"
+          REPO="${OWNER_REPO#*/}"
+          BRANCH="${{ github.ref_name }}"
+
+          # Buscar PR aberto para este branch via API REST
+          PR_INFO=$(curl -sSL -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "${{ github.api_url }}/repos/$OWNER/$REPO/pulls?state=open&head=$OWNER:$BRANCH&per_page=1")
+
+          PR_NUMBER=$(echo "$PR_INFO" | jq -r '.[0].number // empty')
+          if [ -z "${PR_NUMBER:-}" ]; then
+            echo "Nenhum PR aberto para $BRANCH. Encerrando notificação."; exit 0
+          fi
+          PR_TITLE=$(echo "$PR_INFO" | jq -r '.[0].title')
+          PR_URL=$(echo "$PR_INFO" | jq -r '.[0].html_url')
+
+          COMMIT_MSG=$(echo "${{ github.event.head_commit.message }}" | head -n 1)
+          BRANCH_URL="${{ github.server_url }}/${{ github.repository }}/tree/$BRANCH"
+          COMPARE_URL="${{ github.event.compare }}"
+
+          MESSAGE_LINES=(
+            "🛠️ *Novo commit*"
+            ""
+            "*PR*: [#${PR_NUMBER} – $PR_TITLE]($PR_URL)"
+            "*Commit*: \`$COMMIT_MSG\`"
+            "*Autor*: ${{ github.actor }}"
+            "*Branch*: [\`$BRANCH\`]($BRANCH_URL)"
+            ""
+            "[Ver Alterações]($COMPARE_URL) | [Ver PR]($PR_URL)"
+          )
+          MESSAGE=$(printf '%s\n' "${MESSAGE_LINES[@]}")
+
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d text="${MESSAGE}" \
+            -d parse_mode="Markdown"
+
+  ci_status_summary:
+    if: ${{ github.event_name == 'workflow_run' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Determinar status e coletar jobs
+        id: gather
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          RUN_ID="${{ github.event.workflow_run.id }}"
+          REPO="${{ github.repository }}"
+
+          # Status geral
+          CONC="${{ github.event.workflow_run.conclusion }}"
+          case "$CONC" in
+            success) STATUS="✅ Sucesso"; EMOJI="✅"; MSG="Pipeline executado com sucesso! Todos os jobs passaram.";;
+            failure) STATUS="❌ Falha"; EMOJI="❌"; MSG="Pipeline falhou! Verifique os logs para mais detalhes.";;
+            cancelled) STATUS="⏹️ Cancelado"; EMOJI="⏹️"; MSG="Pipeline foi cancelado.";;
+            *) STATUS="⚠️ Desconhecido"; EMOJI="⚠️"; MSG="Pipeline terminou com status: $CONC";;
+          esac
+
+          echo "status=$STATUS" >> $GITHUB_OUTPUT
+          echo "emoji=$EMOJI" >> $GITHUB_OUTPUT
+          echo "message=$MSG" >> $GITHUB_OUTPUT
+
+          # Jobs do run
+          curl -sSL -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "${{ github.api_url }}/repos/$REPO/actions/runs/$RUN_ID/jobs?per_page=100" > jobs.json
+
+          # Lista de falhas com link para o job
+          FAILS=$(jq -r '.jobs[] | select(.conclusion != "success") | "- [\(.name)](\(.html_url)) — \(.conclusion // \"in_progress\")"' jobs.json)
+          if [ -z "$FAILS" ]; then FAILS="- Nenhuma falha"; fi
+          echo "fails<<EOF" >> $GITHUB_OUTPUT
+          echo "$FAILS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          # Status do job de Deploy (se existir)
+          DEPLOY_CONC=$(jq -r '([.jobs[] | select(.name|test("(?i)deploy")) | .conclusion] | first) // "N/A"' jobs.json)
+          echo "deploy_status=$DEPLOY_CONC" >> $GITHUB_OUTPUT
+
+      - name: Enviar resumo
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+        run: |
+          BRANCH="${{ github.event.workflow_run.head_branch }}"
+          BRANCH_URL="${{ github.server_url }}/${{ github.repository }}/tree/$BRANCH"
+          DEPLOY_STATUS="${{ steps.gather.outputs.deploy_status }}"
+          PROD_URL="${{ secrets.PRODUCTION_APP_URL }}"
+          if [ -n "$PROD_URL" ]; then echo "::add-mask::$PROD_URL"; fi
+          PROD_LINE=""
+          if [ "$BRANCH" = "main" ] && [ "$DEPLOY_STATUS" = "success" ]; then
+            PROD_LINE="*Produção*: ${PROD_URL:-"(defina secrets.PRODUCTION_APP_URL)"}"
+          fi
+
+          MESSAGE_LINES=(
+            "${{ steps.gather.outputs.emoji }} *Resumo do pipeline*"
+            ""
+            "*Status*: ${{ steps.gather.outputs.status }}"
+            "*Branch*: [\`$BRANCH\`]($BRANCH_URL)"
+            "*Commit*: \`${{ github.event.workflow_run.head_sha }}\`"
+            "*Autor*: ${{ github.event.workflow_run.actor.login }}"
+            "*Deploy*: $DEPLOY_STATUS"
+          )
+          if [ -n "$PROD_LINE" ]; then
+            MESSAGE_LINES+=("$PROD_LINE")
+          fi
+
+          MESSAGE_LINES+=(
+            ""
+            "*Falhas / Jobs:*"
+            "${{ steps.gather.outputs.fails }}"
+            ""
+            "${{ steps.gather.outputs.message }}"
+            ""
+            "[Ver Detalhes da Execução](${{ github.event.workflow_run.html_url }})"
+          )
+          MESSAGE=$(printf '%s\n' "${MESSAGE_LINES[@]}")
+
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d text="${MESSAGE}" \
+            -d parse_mode="Markdown"

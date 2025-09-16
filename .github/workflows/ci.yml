@@ -17,6 +17,8 @@ jobs:
   validation:
     name: Validação de Código
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
@@ -39,6 +41,9 @@ jobs:
   test:
     name: Testes
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
@@ -65,9 +70,114 @@ jobs:
           path: coverage/
           retention-days: 7
 
+      - name: Notificar sucesso dos testes
+        if: success()
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH_NAME="${{ github.ref_name }}"
+          BRANCH_URL="${{ github.server_url }}/${{ github.repository }}/tree/${{ github.ref_name }}"
+          # Link direto para o job "Testes"
+          JOB_URL=$(curl -sSL -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "${{ github.api_url }}/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs?per_page=100" | \
+            jq -r '.jobs[] | select(.name=="Testes") | .html_url' | head -n1)
+          if [ -z "$JOB_URL" ] || [ "$JOB_URL" = "null" ]; then
+            JOB_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          fi
+          # Tentativa simples de extrair % de cobertura do lcov.info
+          COVERAGE_LINE=""
+          if [ -f coverage/lcov.info ]; then
+            HITS=$(grep -h '^LH:' coverage/lcov.info | awk -F: '{s+=$2} END {print s+0}')
+            FOUND=$(grep -h '^LF:' coverage/lcov.info | awk -F: '{s+=$2} END {print s+0}')
+            if [ "${FOUND:-0}" -gt 0 ]; then
+              PCT=$(awk -v h="$HITS" -v f="$FOUND" 'BEGIN { printf("%.1f", (h/f)*100) }')
+              COVERAGE_LINE="*Cobertura*: ${PCT}%"
+            fi
+          fi
+          # Contexto de PR (se for um PR)
+          PR_LINE=""
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            PR_NUM="${{ github.event.pull_request.number }}"
+            PR_TITLE="${{ github.event.pull_request.title }}"
+            PR_URL="${{ github.event.pull_request.html_url }}"
+            BRANCH_NAME="${{ github.head_ref }}"
+            BRANCH_URL="${{ github.server_url }}/${{ github.repository }}/tree/${{ github.head_ref }}"
+            PR_LINE="*PR*: [#$PR_NUM – $PR_TITLE]($PR_URL)"
+          fi
+          MESSAGE_LINES=("✅ *Testes: Sucesso*")
+          if [ -n "$PR_LINE" ]; then
+            MESSAGE_LINES+=("$PR_LINE")
+          fi
+          MESSAGE_LINES+=(
+            "*Branch*: [\`$BRANCH_NAME\`]($BRANCH_URL)"
+            "*Autor*: ${{ github.actor }}"
+          )
+          if [ -n "$COVERAGE_LINE" ]; then
+            MESSAGE_LINES+=("$COVERAGE_LINE")
+          fi
+          MESSAGE_LINES+=(
+            ""
+            "[Ver logs do Job Testes]($JOB_URL) | [Execução completa](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+          )
+          MESSAGE=$(printf '%s\n' "${MESSAGE_LINES[@]}")
+
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d text="${MESSAGE}" \
+            -d parse_mode="Markdown"
+
+      - name: Notificar falha dos testes
+        if: failure()
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH_NAME="${{ github.ref_name }}"
+          BRANCH_URL="${{ github.server_url }}/${{ github.repository }}/tree/${{ github.ref_name }}"
+          # Link direto para o job "Testes"
+          JOB_URL=$(curl -sSL -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "${{ github.api_url }}/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs?per_page=100" | \
+            jq -r '.jobs[] | select(.name=="Testes") | .html_url' | head -n1)
+          if [ -z "$JOB_URL" ] || [ "$JOB_URL" = "null" ]; then
+            JOB_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          fi
+          # Contexto de PR (se for um PR)
+          PR_LINE=""
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            PR_NUM="${{ github.event.pull_request.number }}"
+            PR_TITLE="${{ github.event.pull_request.title }}"
+            PR_URL="${{ github.event.pull_request.html_url }}"
+            BRANCH_NAME="${{ github.head_ref }}"
+            BRANCH_URL="${{ github.server_url }}/${{ github.repository }}/tree/${{ github.head_ref }}"
+            PR_LINE="*PR*: [#$PR_NUM – $PR_TITLE]($PR_URL)"
+          fi
+          MESSAGE_LINES=("❌ *Testes: Falha*")
+          if [ -n "$PR_LINE" ]; then
+            MESSAGE_LINES+=("$PR_LINE")
+          fi
+          MESSAGE_LINES+=(
+            "*Branch*: [\`$BRANCH_NAME\`]($BRANCH_URL)"
+            "*Autor*: ${{ github.actor }}"
+            ""
+            "⚠️ Verifique os logs para detalhes."
+            ""
+            "[Ver logs do Job Testes]($JOB_URL) | [Execução completa](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+          )
+          MESSAGE=$(printf '%s\n' "${MESSAGE_LINES[@]}")
+
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d text="${MESSAGE}" \
+            -d parse_mode="Markdown"
+
   security:
     name: Verificação de Segurança
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
@@ -145,6 +255,9 @@ jobs:
     needs: [build-and-push-image]
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    permissions:
+      contents: read
+      actions: read
     steps:
       - name: Aguardar disponibilidade da imagem (curto)
         run: sleep 10
@@ -168,3 +281,65 @@ jobs:
               --fail-with-body \
               -w "\nHTTP %{http_code}\n"
           fi
+
+      - name: Notificar deploy realizado
+        if: success()
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+        run: |
+          BRANCH_URL="${{ github.server_url }}/${{ github.repository }}/tree/${{ github.ref_name }}"
+          PROD_URL="${{ secrets.PRODUCTION_APP_URL }}"
+          if [ -n "$PROD_URL" ]; then echo "::add-mask::$PROD_URL"; fi
+          MESSAGE_LINES=(
+            "🚀 *Deploy Realizado com Sucesso*"
+            ""
+            "*Ambiente*: Coolify"
+            "*Branch*: [\`${{ github.ref_name }}\`]($BRANCH_URL)"
+            "*Autor*: ${{ github.actor }}"
+            "*Produção*: ${PROD_URL:-"(defina secrets.PRODUCTION_APP_URL)"}"
+            ""
+            "✅ A aplicação foi implantada e está disponível."
+          )
+          MESSAGE=$(printf '%s\n' "${MESSAGE_LINES[@]}")
+
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d text="${MESSAGE}" \
+            -d parse_mode="Markdown"
+
+      - name: Notificar falha no deploy
+        if: failure()
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH_URL="${{ github.server_url }}/${{ github.repository }}/tree/${{ github.ref_name }}"
+          PROD_URL="${{ secrets.PRODUCTION_APP_URL }}"
+          if [ -n "$PROD_URL" ]; then echo "::add-mask::$PROD_URL"; fi
+          # Link direto para o job "Deploy no Coolify"
+          JOB_URL=$(curl -sSL -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "${{ github.api_url }}/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs?per_page=100" | \
+            jq -r '.jobs[] | select(.name=="Deploy no Coolify") | .html_url' | head -n1)
+          if [ -z "$JOB_URL" ] || [ "$JOB_URL" = "null" ]; then
+            JOB_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          fi
+          MESSAGE_LINES=(
+            "❌ *Deploy Falhou*"
+            ""
+            "*Ambiente*: Coolify"
+            "*Branch*: [\`${{ github.ref_name }}\`]($BRANCH_URL)"
+            "*Autor*: ${{ github.actor }}"
+            "*Produção*: ${PROD_URL:-"(defina secrets.PRODUCTION_APP_URL)"}"
+            ""
+            "⚠️ Houve um problema durante o deploy. Verifique os logs."
+            ""
+            "[Ver logs do Job Deploy]($JOB_URL) | [Execução completa](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+          )
+          MESSAGE=$(printf '%s\n' "${MESSAGE_LINES[@]}")
+
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d text="${MESSAGE}" \
+            -d parse_mode="Markdown"
