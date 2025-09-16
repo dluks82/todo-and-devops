@@ -1,4 +1,13 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+
 name: Continuous Integration
+
+# Secrets utilizados:
+# - TELEGRAM_TOKEN: Token do bot do Telegram
+# - TELEGRAM_CHANNEL_ID: ID do canal/grupo do Telegram
+# - COOLIFY_WEBHOOK: URL do webhook para o Coolify
+# - COOLIFY_TOKEN: Token de autenticação para o Coolify
+# - PRODUCTION_APP_URL: URL da aplicação em produção
 
 on:
   push:
@@ -53,6 +62,9 @@ jobs:
           echo "is_feature=$IS_FEATURE" >> $GITHUB_OUTPUT
 
       - name: Notificar início da pipeline
+        # Usar o token do Telegram para enviar notificação
+        # O aviso ocorre porque o analisador estático não sabe se o secret existe
+        # Este comentário ajuda a documentar o uso intencional
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_CHANNEL_ID }}
@@ -95,6 +107,7 @@ jobs:
 
       - name: Notificar falha na validação
         if: failure()
+        # Usar o token do Telegram para enviar notificação de erro
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_CHANNEL_ID }}
@@ -190,6 +203,7 @@ jobs:
 
       - name: Notificar Telegram - Testes com Sucesso
         if: success()
+        # Usar o token do Telegram para enviar notificação de sucesso
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_CHANNEL_ID }}
@@ -208,6 +222,7 @@ jobs:
 
       - name: Notificar falha dos testes
         if: failure()
+        # Usar o token do Telegram para enviar notificação de falha
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_CHANNEL_ID }}
@@ -251,6 +266,7 @@ jobs:
 
       - name: Notificar problemas de segurança
         if: steps.audit.outcome == 'failure'
+        # Usar o token do Telegram para enviar alerta de segurança
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_CHANNEL_ID }}
@@ -326,6 +342,7 @@ jobs:
 
       - name: Notificar construção da imagem
         if: success() && github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/v'))
+        # Usar o token do Telegram para enviar notificação da imagem
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_CHANNEL_ID }}
@@ -353,6 +370,7 @@ jobs:
         run: sleep 10
       - name: Acionar deploy no Coolify
         id: deploy
+        # Usar o webhook e token do Coolify para realizar o deploy
         run: |
           set -euo pipefail
           if [ -z "${{ secrets.COOLIFY_WEBHOOK }}" ]; then
@@ -375,6 +393,7 @@ jobs:
 
       - name: Notificar deploy realizado
         if: success()
+        # Usar o token do Telegram para notificação de deploy
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_CHANNEL_ID }}
@@ -393,6 +412,7 @@ jobs:
 
       - name: Notificar falha no deploy
         if: failure()
+        # Usar o token do Telegram para notificação de falha no deploy
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_CHANNEL_ID }}
@@ -451,6 +471,7 @@ jobs:
           echo "pipeline_status=$PIPELINE_STATUS" >> $GITHUB_OUTPUT
 
       - name: Enviar Notificação Telegram - Resumo da Pipeline
+        # Usar o token do Telegram para notificação de resumo
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_CHANNEL_ID }}
