@@ -2,9 +2,18 @@ import Fastify, { FastifyInstance } from 'fastify'
 import 'dotenv/config'
 
 import { swaggerPlugin } from './plugins/swagger.js'
+import { DEFAULT_TODO_LIMIT, todosPlugin } from './routes/todos.js'
 
 type HealthResponse = { status: 'ok' }
 type RootResponse = { hello: string }
+
+const parseTodoLimit = (value: string | undefined): number => {
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed) || !Number.isInteger(parsed) || parsed <= 0) {
+    return DEFAULT_TODO_LIMIT
+  }
+  return parsed
+}
 
 const healthResponseSchema = {
   type: 'object',
@@ -28,6 +37,10 @@ export async function buildApp(): Promise<FastifyInstance> {
   const app = Fastify({ logger: true })
 
   await app.register(swaggerPlugin)
+
+  await app.register(todosPlugin, {
+    maxItems: parseTodoLimit(process.env.TODO_MAX_ITEMS),
+  })
 
   app.get<{ Reply: HealthResponse }>(
     '/health',
