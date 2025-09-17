@@ -29,7 +29,9 @@ todo-and-devops/
 ├── src/
 │   ├── plugins/
 │   │   └── swagger.ts # Configuração do Swagger/OpenAPI
-│   └── server.ts      # Ponto de entrada e rotas básicas
+│   ├── routes/
+│   │   └── todos.ts   # Rotas de exemplo (CRUD em memória)
+│   └── server.ts      # Ponto de entrada e registro de plugins
 ├── dist/             # Código compilado (gerado)
 ├── docs/             # Documentação adicional
 │   └── DESENVOLVIMENTO.md # Guia de fluxo de desenvolvimento
@@ -46,6 +48,7 @@ O projeto utiliza o pacote `dotenv` para gerenciar variáveis de ambiente. As pr
 
 - `PORT`: Porta em que o servidor será executado (padrão: 3010)
 - `NODE_ENV`: Ambiente de execução (`development`, `test`, `production`)
+- `TODO_MAX_ITEMS`: Máximo de itens de tarefa mantidos em memória (padrão: 100)
 
 ### 🚀 Início Rápido
 
@@ -68,6 +71,7 @@ Para começar a desenvolver rapidamente:
    - Endpoint principal: `http://localhost:3000`
    - Verificação de saúde: `http://localhost:3000/health`
    - Documentação Swagger UI: `http://localhost:3000/docs`
+   - Exemplos de tarefas: `http://localhost:3000/todos`
 
 Veja o [Guia de Desenvolvimento](docs/DESENVOLVIMENTO.md) para mais opções.
 
@@ -89,6 +93,7 @@ O projeto inclui configurações Docker otimizadas para desenvolvimento e produ�
 - Docker + Compose
 - dotenv (gerenciamento de variáveis de ambiente)
 - @fastify/swagger e @fastify/swagger-ui (documentação automática)
+- Endpoints de exemplo para Todo (CRUD em memória)
 
 ### 🌐 Configuração da Documentação em Produção
 

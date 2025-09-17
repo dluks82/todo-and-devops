@@ -21,6 +21,7 @@ const plugin: FastifyPluginAsync = async app => {
         description: 'Monitoramento da disponibilidade da API',
       },
       { name: 'Root', description: 'Informações gerais da aplicação' },
+      { name: 'Todos', description: 'Gerenciamento de tarefas de exemplo' },
     ],
   }
 
