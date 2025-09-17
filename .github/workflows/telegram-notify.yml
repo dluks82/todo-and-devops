@@ -1,0 +1,100 @@
+name: Notificações Telegram (PR e Commits)
+
+on:
+  # Disparar apenas em eventos de PR (aberto, reaberto, fechado)
+  pull_request:
+    types: [opened, reopened, closed]
+  # Disparar em commits enviados a PRs existentes
+  pull_request_target:
+    types: [synchronize]
+
+permissions:
+  contents: read
+  actions: read
+  pull-requests: read
+
+concurrency:
+  group: telegram-notify-${{ github.event_name }}-${{ github.run_id || github.run_number }}
+  cancel-in-progress: true
+
+jobs:
+  # Só executa em eventos de PR (aberto ou reaberto)
+  pr_open_reopen:
+    if: ${{ github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Notificar PR aberto/reaberto
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: markdown
+          disable_web_page_preview: true
+          message: |
+            📌 *PR aberto*
+
+            *PR*: [#${{ github.event.pull_request.number }} – ${{ github.event.pull_request.title }}](${{ github.event.pull_request.html_url }})
+            *Autor*: ${{ github.actor }}
+            *Branch*: [`${{ github.head_ref || github.ref_name }}`](${{ github.server_url }}/${{ github.repository }}/tree/${{ github.head_ref || github.ref_name }})
+
+            [Ver Alterações](${{ github.event.pull_request.html_url }}/files) | [Ver PR](${{ github.event.pull_request.html_url }})
+
+  # Só executa em eventos de PR (mesclado)
+  pr_merged:
+    if: ${{ github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Notificar PR mesclado
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: markdown
+          disable_web_page_preview: true
+          message: |
+            ✅ *PR mesclado*
+
+            *PR*: [#${{ github.event.pull_request.number }} – ${{ github.event.pull_request.title }}](${{ github.event.pull_request.html_url }})
+            *Mesclado por*: ${{ github.actor }}
+            *Branch*: [`${{ github.head_ref || github.ref_name }}`](${{ github.server_url }}/${{ github.repository }}/tree/${{ github.head_ref || github.ref_name }}) → `${{ github.event.pull_request.base.ref }}`
+
+            [Ver PR](${{ github.event.pull_request.html_url }})
+
+  # Só executa quando novos commits são enviados a um PR existente
+  pr_new_commits:
+    if: ${{ github.event_name == 'pull_request_target' && github.event.action == 'synchronize' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Obter informações do commit
+        id: commit_info
+        run: |
+          PR_URL="${{ github.event.pull_request.html_url }}"
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          COMMIT_MSG=$(echo "${{ github.event.pull_request.title }}" | head -n 1)
+          COMPARE_URL="${{ github.event.pull_request._links.html.href }}/files"
+
+          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          echo "pr_title=$PR_TITLE" >> $GITHUB_OUTPUT
+          echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
+          echo "commit_msg=$COMMIT_MSG" >> $GITHUB_OUTPUT
+          echo "compare_url=$COMPARE_URL" >> $GITHUB_OUTPUT
+
+      - name: Enviar notificação de novo commit
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: markdown
+          disable_web_page_preview: true
+          message: |
+            📝 *Novos commits no PR*
+
+            *PR*: [#${{ steps.commit_info.outputs.pr_number }} – ${{ steps.commit_info.outputs.pr_title }}](${{ steps.commit_info.outputs.pr_url }})
+            *Autor dos commits*: ${{ github.actor }}
+            *Branch*: [`${{ github.event.pull_request.head.ref }}`](${{ github.server_url }}/${{ github.repository }}/tree/${{ github.event.pull_request.head.ref }})
+
+            [Ver Alterações](${{ steps.commit_info.outputs.compare_url }}) | [Ver PR](${{ steps.commit_info.outputs.pr_url }})

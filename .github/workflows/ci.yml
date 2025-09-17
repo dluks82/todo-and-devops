@@ -1,8 +1,23 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+
 name: Continuous Integration
+
+# Secrets utilizados:
+# - TELEGRAM_TOKEN: Token do bot do Telegram
+# - TELEGRAM_CHANNEL_ID: ID do canal/grupo do Telegram
+# - COOLIFY_WEBHOOK: URL do webhook para o Coolify
+# - COOLIFY_TOKEN: Token de autenticação para o Coolify
+# - PRODUCTION_APP_URL: URL da aplicação em produção
 
 on:
   push:
-    branches: [main, develop, 'feature/**']
+    branches:
+      - main
+      - develop
+      # Branches de feature, mas não as branches específicas de notificações Telegram para evitar duplicação
+      - 'feature/**'
+      - '!feature/telegram-notifications'
+      - '!feature/telegram-notifications-v2'
     tags: ['v*']
   pull_request:
     branches: [main, develop]
@@ -14,9 +29,69 @@ env:
   NODE_VERSION: '20'
 
 jobs:
+  pipeline_start:
+    name: Início da Pipeline
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Extrair informações do contexto
+        id: context
+        run: |
+          # Determinar nome e URL corretos da branch
+          BRANCH_NAME="${{ github.ref_name }}"
+          BRANCH_URL="${{ github.server_url }}/${{ github.repository }}/tree/${{ github.ref_name }}"
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BRANCH_NAME="${{ github.head_ref }}"
+            BRANCH_URL="${{ github.server_url }}/${{ github.repository }}/tree/${{ github.head_ref }}"
+          fi
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          echo "branch_url=$BRANCH_URL" >> $GITHUB_OUTPUT
+
+          # Detectar tipo de pipeline
+          IS_MAIN_DEPLOY="false"
+          IS_PR="false"
+          IS_FEATURE="false"
+
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            IS_PR="true"
+          elif [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            IS_MAIN_DEPLOY="true"
+          elif [ "${{ github.ref }}" = "refs/heads/develop" ]; then
+            IS_DEVELOP="true"
+          else
+            IS_FEATURE="true"
+          fi
+
+          echo "is_main_deploy=$IS_MAIN_DEPLOY" >> $GITHUB_OUTPUT
+          echo "is_pr=$IS_PR" >> $GITHUB_OUTPUT
+          echo "is_feature=$IS_FEATURE" >> $GITHUB_OUTPUT
+
+      - name: Notificar início da pipeline
+        # Usar o token do Telegram para enviar notificação
+        # O aviso ocorre porque o analisador estático não sabe se o secret existe
+        # Este comentário ajuda a documentar o uso intencional
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: markdown
+          disable_web_page_preview: true
+          message: |
+            🔄 *Pipeline iniciada*
+
+            ${{ github.event_name == 'pull_request' && format('*PR*: [#{0} – {1}]({2})', github.event.pull_request.number, github.event.pull_request.title, github.event.pull_request.html_url) || '' }}
+            *Branch*: [`${{ steps.context.outputs.branch_name }}`](${{ steps.context.outputs.branch_url }})
+            *Autor*: ${{ github.actor }}
+
+            [Ver Execução](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
   validation:
     name: Validação de Código
+    needs: [pipeline_start]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
@@ -36,12 +111,55 @@ jobs:
       - name: Executar lint
         run: npm run lint
 
+      - name: Notificar falha na validação
+        if: failure()
+        # Usar o token do Telegram para enviar notificação de erro
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: markdown
+          disable_web_page_preview: true
+          message: |
+            ❌ *Validação de código: Falha*
+
+            ${{ github.event_name == 'pull_request' && format('*PR*: [#{0} – {1}]({2})', github.event.pull_request.number, github.event.pull_request.title, github.event.pull_request.html_url) || '' }}
+            *Branch*: [`${{ github.head_ref || github.ref_name }}`](${{ github.server_url }}/${{ github.repository }}/tree/${{ github.head_ref || github.ref_name }})
+            *Autor*: ${{ github.actor }}
+
+            ⚠️ Verifique problemas de formatação ou lint.
+
+            [Ver Logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
   test:
     name: Testes
+    needs: [validation]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
+
+      - name: Extrair informações do contexto
+        id: context
+        run: |
+          # Determinar nome e URL corretos da branch
+          BRANCH_NAME="${{ github.ref_name }}"
+          BRANCH_URL="${{ github.server_url }}/${{ github.repository }}/tree/${{ github.ref_name }}"
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BRANCH_NAME="${{ github.head_ref }}"
+            BRANCH_URL="${{ github.server_url }}/${{ github.repository }}/tree/${{ github.head_ref }}"
+          fi
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          echo "branch_url=$BRANCH_URL" >> $GITHUB_OUTPUT
+
+          # Informações do commit
+          COMMIT_SHORT=$(git rev-parse --short HEAD)
+          COMMIT_URL="${{ github.server_url }}/${{ github.repository }}/commit/$(git rev-parse HEAD)"
+          echo "commit_short=$COMMIT_SHORT" >> $GITHUB_OUTPUT
+          echo "commit_url=$COMMIT_URL" >> $GITHUB_OUTPUT
 
       - name: Configurar Node.js
         uses: actions/setup-node@v4
@@ -65,9 +183,75 @@ jobs:
           path: coverage/
           retention-days: 7
 
+      - name: Extrair informações de cobertura
+        id: coverage
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Link direto para o job "Testes"
+          JOB_URL=$(curl -sSL -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "${{ github.api_url }}/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs?per_page=100" | \
+            jq -r '.jobs[] | select(.name=="Testes") | .html_url' | head -n1)
+          if [ -z "$JOB_URL" ] || [ "$JOB_URL" = "null" ]; then
+            JOB_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          fi
+          echo "job_url=$JOB_URL" >> $GITHUB_OUTPUT
+
+          # Extrair % de cobertura do lcov.info de forma simples
+          if [ -f coverage/lcov.info ]; then
+            HITS=$(grep -h '^LH:' coverage/lcov.info | awk -F: '{s+=$2} END {print s+0}')
+            FOUND=$(grep -h '^LF:' coverage/lcov.info | awk -F: '{s+=$2} END {print s+0}')
+            if [ "${FOUND:-0}" -gt 0 ]; then
+              PCT=$(awk -v h="$HITS" -v f="$FOUND" 'BEGIN { printf("%.1f", (h/f)*100) }')
+              echo "percentage=$PCT" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+      - name: Notificar Telegram - Testes com Sucesso
+        if: success()
+        # Usar o token do Telegram para enviar notificação de sucesso
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: markdown
+          disable_web_page_preview: true
+          message: |
+            ✅ *Testes Concluídos com Sucesso*
+
+            *Branch*: [${{ steps.context.outputs.branch_name }}](${{ steps.context.outputs.branch_url }})
+            *Commit*: [${{ steps.context.outputs.commit_short }}](${{ steps.context.outputs.commit_url }})
+
+            📊 *Cobertura de Testes*: ${{ steps.coverage.outputs.percentage }}%
+
+            [${{ github.repository }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+      - name: Notificar falha dos testes
+        if: failure()
+        # Usar o token do Telegram para enviar notificação de falha
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: markdown
+          disable_web_page_preview: true
+          message: |
+            ❌ *Testes: Falha*
+
+            ${{ github.event_name == 'pull_request' && format('*PR*: [#{0} – {1}]({2})', github.event.pull_request.number, github.event.pull_request.title, github.event.pull_request.html_url) || '' }}
+            *Branch*: [`${{ github.head_ref || github.ref_name }}`](${{ github.server_url }}/${{ github.repository }}/tree/${{ github.head_ref || github.ref_name }})
+            *Autor*: ${{ github.actor }}
+
+            ⚠️ Verifique os logs para detalhes.
+
+            [Ver logs do Job Testes](${{ steps.coverage.outputs.job_url }})
+
   security:
     name: Verificação de Segurança
+    needs: [test]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
@@ -82,12 +266,33 @@ jobs:
         run: npm ci
 
       - name: Verificar vulnerabilidades
+        id: audit
         run: npm audit --omit=dev
         continue-on-error: true
 
+      - name: Notificar problemas de segurança
+        if: steps.audit.outcome == 'failure'
+        # Usar o token do Telegram para enviar alerta de segurança
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: markdown
+          disable_web_page_preview: true
+          message: |
+            ⚠️ *Alerta de Segurança*
+
+            ${{ github.event_name == 'pull_request' && format('*PR*: [#{0} – {1}]({2})', github.event.pull_request.number, github.event.pull_request.title, github.event.pull_request.html_url) || '' }}
+            *Branch*: [`${{ github.head_ref || github.ref_name }}`](${{ github.server_url }}/${{ github.repository }}/tree/${{ github.head_ref || github.ref_name }})
+
+            Foram encontradas vulnerabilidades nas dependências. 
+            Recomendamos revisar as dependências e atualizar conforme necessário.
+
+            [Ver Logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
   build-and-push-image:
     name: Build e Push da Imagem Docker
-    needs: [validation, test, security]
+    needs: [security]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -128,6 +333,7 @@ jobs:
             type=semver,pattern={{major}},event=tag
 
       - name: Build e (opcional) Push da imagem Docker
+        id: build-push
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -140,15 +346,37 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Notificar construção da imagem
+        if: success() && github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/v'))
+        # Usar o token do Telegram para enviar notificação da imagem
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: markdown
+          disable_web_page_preview: true
+          message: |
+            📦 *Imagem Docker construída*
+
+            *Branch*: [`${{ github.ref_name }}`](${{ github.server_url }}/${{ github.repository }}/tree/${{ github.ref_name }})
+            *Tags*: `${{ steps.meta.outputs.tags }}`
+
+            A imagem foi construída e enviada para o GitHub Container Registry.
+
   deploy-coolify:
     name: Deploy no Coolify
     needs: [build-and-push-image]
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    permissions:
+      contents: read
+      actions: read
     steps:
       - name: Aguardar disponibilidade da imagem (curto)
         run: sleep 10
       - name: Acionar deploy no Coolify
+        id: deploy
+        # Usar o webhook e token do Coolify para realizar o deploy
         run: |
           set -euo pipefail
           if [ -z "${{ secrets.COOLIFY_WEBHOOK }}" ]; then
@@ -168,3 +396,105 @@ jobs:
               --fail-with-body \
               -w "\nHTTP %{http_code}\n"
           fi
+
+      - name: Notificar deploy realizado
+        if: success()
+        # Usar o token do Telegram para notificação de deploy
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: markdown
+          disable_web_page_preview: true
+          message: |
+            🚀 *Deploy Realizado com Sucesso*
+
+            *Ambiente*: Coolify
+            *Branch*: [`${{ github.ref_name }}`](${{ github.server_url }}/${{ github.repository }}/tree/${{ github.ref_name }})
+            *Autor*: ${{ github.actor }}
+            *Produção*: ${{ secrets.PRODUCTION_APP_URL || '(defina secrets.PRODUCTION_APP_URL)' }}
+
+            ✅ A aplicação foi implantada e está disponível.
+
+      - name: Notificar falha no deploy
+        if: failure()
+        # Usar o token do Telegram para notificação de falha no deploy
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: markdown
+          disable_web_page_preview: true
+          message: |
+            ❌ *Deploy Falhou*
+
+            *Ambiente*: Coolify
+            *Branch*: [`${{ github.ref_name }}`](${{ github.server_url }}/${{ github.repository }}/tree/${{ github.ref_name }})
+            *Autor*: ${{ github.actor }}
+            *Produção*: ${{ secrets.PRODUCTION_APP_URL || '(defina secrets.PRODUCTION_APP_URL)' }}
+
+            ⚠️ Houve um problema durante o deploy. Verifique os logs.
+
+            [Ver Logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+  pipeline_summary:
+    name: Resumo da Pipeline
+    needs: [validation, test, security, build-and-push-image, deploy-coolify]
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Extrair informações do contexto
+        id: context
+        run: |
+          # Determinar nome e URL corretos da branch
+          BRANCH_NAME="${{ github.ref_name }}"
+          BRANCH_URL="${{ github.server_url }}/${{ github.repository }}/tree/${{ github.ref_name }}"
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BRANCH_NAME="${{ github.head_ref }}"
+            BRANCH_URL="${{ github.server_url }}/${{ github.repository }}/tree/${{ github.head_ref }}"
+          fi
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          echo "branch_url=$BRANCH_URL" >> $GITHUB_OUTPUT
+
+          # Determinar o status geral da pipeline
+          if [[ "${{ needs.validation.result }}" == "success" && 
+                "${{ needs.test.result }}" == "success" && 
+                "${{ needs.security.result }}" == "success" && 
+                "${{ needs.build-and-push-image.result }}" == "success" && 
+                ("${{ needs.deploy-coolify.result }}" == "success" || "${{ needs.deploy-coolify.result }}" == "skipped") ]]; then
+            PIPELINE_STATUS="✅ Sucesso"
+          elif [[ "${{ needs.validation.result }}" == "cancelled" || 
+                  "${{ needs.test.result }}" == "cancelled" || 
+                  "${{ needs.security.result }}" == "cancelled" || 
+                  "${{ needs.build-and-push-image.result }}" == "cancelled" || 
+                  "${{ needs.deploy-coolify.result }}" == "cancelled" ]]; then
+            PIPELINE_STATUS="⚠️ Cancelada"
+          else
+            PIPELINE_STATUS="❌ Falha"
+          fi
+          echo "pipeline_status=$PIPELINE_STATUS" >> $GITHUB_OUTPUT
+
+      - name: Enviar Notificação Telegram - Resumo da Pipeline
+        # Usar o token do Telegram para notificação de resumo
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: markdown
+          disable_web_page_preview: true
+          message: |
+            📊 *Resumo da Pipeline*
+
+            *Branch*: [`${{ steps.context.outputs.branch_name }}`](${{ steps.context.outputs.branch_url }})
+            *Status*: ${{ steps.context.outputs.pipeline_status }}
+
+            *Detalhes dos Jobs:*
+            🔍 Validação: ${{ needs.validation.result }}
+            🧪 Testes: ${{ needs.test.result }}
+            🛡️ Segurança: ${{ needs.security.result }}
+            🏗️ Build da Imagem: ${{ needs.build-and-push-image.result }}
+            🚢 Deploy: ${{ needs.deploy-coolify.result }}
+
+            [${{ github.repository }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})

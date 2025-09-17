@@ -34,3 +34,21 @@ jobs:
               --fail-with-body \
               -w "\nHTTP %{http_code}\n"
           fi
+
+      - name: Notificar deploy realizado
+        if: success()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: markdown
+          disable_web_page_preview: true
+          message: |
+            🚢 *Deploy Manual Realizado com Sucesso*
+
+            *Ambiente*: Coolify
+            *Branch*: [`${{ github.ref_name }}`](${{ github.server_url }}/${{ github.repository }}/tree/${{ github.ref_name }})
+            *Autor*: ${{ github.actor }}
+            *Produção*: ${{ secrets.PRODUCTION_APP_URL || '(defina secrets.PRODUCTION_APP_URL)' }}
+
+            ✅ A aplicação foi implantada e está disponível.

@@ -45,3 +45,22 @@ jobs:
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
+
+      - name: Notificar conclusão da análise de segurança
+        if: always()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: markdown
+          disable_web_page_preview: true
+          message: |
+            🔍 *Análise CodeQL ${{ job.status == 'success' && 'Concluída' || 'Falhou' }}*
+
+            *Branch*: [`${{ github.head_ref || github.ref_name }}`](${{ github.server_url }}/${{ github.repository }}/tree/${{ github.head_ref || github.ref_name }})
+            *Tipo*: ${{ github.event_name == 'schedule' && 'Análise Agendada' || (github.event_name == 'pull_request' && 'Pull Request' || 'Push') }}
+            ${{ github.event_name == 'pull_request' && format('*PR*: [#{0}]({1})', github.event.pull_request.number, github.event.pull_request.html_url) || '' }}
+
+            ${{ job.status == 'success' && '✅ Nenhum problema de segurança crítico foi encontrado.' || '⚠️ A análise encontrou possíveis problemas de segurança.' }}
+
+            [Ver Detalhes da Análise](${{ github.server_url }}/${{ github.repository }}/security/code-scanning)
