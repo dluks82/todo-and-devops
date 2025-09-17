@@ -4,10 +4,14 @@ on:
   pull_request:
     types: [opened, reopened, closed]
   push:
-    branches-ignore:
-      - main
-      - develop
-      - 'feature/**' # Ignorar branches de feature que já serão notificados pelo CI
+    branches:
+      # Para evitar duplicação, especificamente incluímos a branch de notificações Telegram
+      # e excluímos as branches que já são cobertas pelo CI
+      - 'feature/telegram-notifications'
+      - '**'
+      - '!main'
+      - '!develop'
+      - '!feature/**'
 
 permissions:
   contents: read
@@ -15,7 +19,7 @@ permissions:
 
 concurrency:
   group: telegram-notify-${{ github.event_name }}-${{ github.run_id || github.run_number }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   # Só executa em eventos de PR (aberto ou reaberto)
