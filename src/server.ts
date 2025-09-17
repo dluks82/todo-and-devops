@@ -1,31 +1,84 @@
 import Fastify, { FastifyInstance } from 'fastify'
 import 'dotenv/config'
 
+import { swaggerPlugin } from './plugins/swagger'
+
 type HealthResponse = { status: 'ok' }
 type RootResponse = { hello: string }
 
-export function buildApp(): FastifyInstance {
+const healthResponseSchema = {
+  type: 'object',
+  properties: {
+    status: { type: 'string', enum: ['ok'] },
+  },
+  required: ['status'],
+  additionalProperties: false,
+} as const
+
+const rootResponseSchema = {
+  type: 'object',
+  properties: {
+    hello: { type: 'string' },
+  },
+  required: ['hello'],
+  additionalProperties: false,
+} as const
+
+export async function buildApp(): Promise<FastifyInstance> {
   const app = Fastify({ logger: true })
 
-  app.get<{ Reply: HealthResponse }>('/health', () => ({ status: 'ok' }))
-  app.get<{ Reply: RootResponse }>('/', () => ({
-    hello: 'todo-and-devops-api',
-  }))
+  await app.register(swaggerPlugin)
+
+  app.get<{ Reply: HealthResponse }>(
+    '/health',
+    {
+      schema: {
+        tags: ['Health'],
+        summary: 'Retorna o status de saúde da API',
+        response: {
+          200: {
+            description: 'Status atual da API',
+            ...healthResponseSchema,
+          },
+        },
+      },
+    },
+    () => ({ status: 'ok' })
+  )
+  app.get<{ Reply: RootResponse }>(
+    '/',
+    {
+      schema: {
+        tags: ['Root'],
+        summary: 'Endpoint padrão da API',
+        response: {
+          200: {
+            description: 'Informações básicas da API',
+            ...rootResponseSchema,
+          },
+        },
+      },
+    },
+    () => ({
+      hello: 'todo-and-devops-api',
+    })
+  )
 
   return app
 }
 
 // Only start the server when not running tests
 if (process.env.NODE_ENV !== 'test') {
-  const app = buildApp()
-  const port = Number(process.env.PORT ?? 3000)
+  let appInstance: FastifyInstance | null = null
 
   const start: () => Promise<void> = async () => {
     try {
-      await app.listen({ port, host: '0.0.0.0' })
-      app.log.info(`Server on :${port}`)
+      appInstance = await buildApp()
+      const port = Number(process.env.PORT ?? 3000)
+      await appInstance.listen({ port, host: '0.0.0.0' })
+      appInstance.log.info(`Server on :${port}`)
     } catch (err) {
-      app.log.error(err)
+      appInstance?.log.error(err)
       process.exit(1)
     }
   }
@@ -35,8 +88,9 @@ if (process.env.NODE_ENV !== 'test') {
 
   process.on('SIGTERM', () => {
     void (async () => {
-      app.log.info('SIGTERM received, closing...')
-      await app.close()
+      if (!appInstance) return
+      appInstance.log.info('SIGTERM received, closing...')
+      await appInstance.close()
       process.exit(0)
     })()
   })
