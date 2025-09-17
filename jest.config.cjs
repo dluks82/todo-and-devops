@@ -13,6 +13,9 @@ module.exports = {
       },
     ],
   },
+  moduleNameMapper: {
+    '^(\\.{1,2}/.*)\\.js$': '$1',
+  },
   // No path aliases needed in this setup
   // Aumentando o timeout padrão para 10 segundos
   testTimeout: 10000,

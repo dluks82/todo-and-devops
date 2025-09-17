@@ -1,7 +1,7 @@
 import Fastify, { FastifyInstance } from 'fastify'
 import 'dotenv/config'
 
-import { swaggerPlugin } from './plugins/swagger'
+import { swaggerPlugin } from './plugins/swagger.js'
 
 type HealthResponse = { status: 'ok' }
 type RootResponse = { hello: string }
