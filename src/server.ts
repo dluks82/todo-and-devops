@@ -5,7 +5,12 @@ import { swaggerPlugin } from './plugins/swagger.js'
 import { DEFAULT_TODO_LIMIT, todosPlugin } from './routes/todos.js'
 
 type HealthResponse = { status: 'ok' }
-type RootResponse = { hello: string }
+type RootResponse = {
+  name: string
+  version: string
+  description: string
+  docsUrl: string
+}
 
 const parseTodoLimit = (value: string | undefined): number => {
   const parsed = Number(value)
@@ -27,11 +32,22 @@ const healthResponseSchema = {
 const rootResponseSchema = {
   type: 'object',
   properties: {
-    hello: { type: 'string' },
+    name: { type: 'string' },
+    version: { type: 'string' },
+    description: { type: 'string' },
+    docsUrl: { type: 'string', format: 'uri-reference' },
   },
-  required: ['hello'],
+  required: ['name', 'version', 'description', 'docsUrl'],
   additionalProperties: false,
 } as const
+
+const apiMetadata: RootResponse = {
+  name: process.env.API_NAME ?? 'Todo & DevOps API',
+  version:
+    process.env.API_VERSION ?? process.env.npm_package_version ?? '1.0.0',
+  description: process.env.API_DESCRIPTION ?? 'API para projeto Todo & DevOps',
+  docsUrl: '/docs',
+}
 
 export async function buildApp(): Promise<FastifyInstance> {
   const app = Fastify({ logger: true })
@@ -72,9 +88,7 @@ export async function buildApp(): Promise<FastifyInstance> {
         },
       },
     },
-    () => ({
-      hello: 'todo-and-devops-api',
-    })
+    () => ({ ...apiMetadata })
   )
 
   return app
