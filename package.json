@@ -30,8 +30,11 @@
     "docker:stop": "docker-compose down"
   },
   "dependencies": {
+    "@fastify/swagger": "^9.5.1",
+    "@fastify/swagger-ui": "^5.2.3",
     "dotenv": "^17.2.1",
-    "fastify": "^5.0.0"
+    "fastify": "^5.0.0",
+    "fastify-plugin": "^5.0.1"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.0.0",

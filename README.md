@@ -27,7 +27,9 @@ Para detalhes sobre o fluxo de desenvolvimento, configuração do ambiente e com
 ```code
 todo-and-devops/
 ├── src/
-│   └── server.ts     # Ponto de entrada e rotas básicas
+│   ├── plugins/
+│   │   └── swagger.ts # Configuração do Swagger/OpenAPI
+│   └── server.ts      # Ponto de entrada e rotas básicas
 ├── dist/             # Código compilado (gerado)
 ├── docs/             # Documentação adicional
 │   └── DESENVOLVIMENTO.md # Guia de fluxo de desenvolvimento
@@ -65,6 +67,7 @@ Para começar a desenvolver rapidamente:
 3. Acesse a API:
    - Endpoint principal: `http://localhost:3000`
    - Verificação de saúde: `http://localhost:3000/health`
+   - Documentação Swagger UI: `http://localhost:3000/docs`
 
 Veja o [Guia de Desenvolvimento](docs/DESENVOLVIMENTO.md) para mais opções.
 
@@ -85,6 +88,14 @@ O projeto inclui configurações Docker otimizadas para desenvolvimento e produ�
 - tsx (dev server com hot-reload)
 - Docker + Compose
 - dotenv (gerenciamento de variáveis de ambiente)
+- @fastify/swagger e @fastify/swagger-ui (documentação automática)
+
+### 🌐 Configuração da Documentação em Produção
+
+Por padrão a especificação usa o próprio host da requisição. Para exibir um endereço específico (por exemplo, um domínio público), defina as variáveis:
+
+- `SWAGGER_SERVER_URL`: URL base a ser exibida nos servidores do OpenAPI.
+- `SWAGGER_SERVER_DESCRIPTION`: Descrição opcional desse servidor (padrão: "Servidor configurado via variável de ambiente").
 
 ## 📄 Licença
 
